@@ -135,17 +135,29 @@ class GeofencingMapState extends State<GeofencingMap> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MapLibreMap(
-      onMapCreated: _onMapCreated,
-      initialCameraPosition: CameraPosition(
-        target: geofenceCenter, // Use geofenceCenter here
-        zoom: 14.0, // Zoom level for better visibility of the geofence
+Widget build(BuildContext context) {
+  return Stack(
+    children: [
+      MapLibreMap(
+        onMapCreated: _onMapCreated,
+        initialCameraPosition: CameraPosition(
+          target: geofenceCenter,
+          zoom: 14.0,
+        ),
+        styleString: "https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV",
       ),
-      rotateGesturesEnabled: true,
-      styleString: "https://demotiles.maplibre.org/style.json", // Use a valid MapLibre style here
-    );
-  }
+      const Positioned(
+        bottom: 10,
+        right: 10,
+        child: Text(
+          "© OpenStreetMap contributors",
+          style: TextStyle(color: Colors.black54, fontSize: 12),
+        ),
+      ),
+    ],
+  );
+}
+
 
   @override
   void dispose() {
