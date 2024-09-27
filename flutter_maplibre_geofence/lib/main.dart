@@ -69,9 +69,11 @@ class GeofencingMapState extends State<GeofencingMap> {
   // Add geofence circle to the map as a polygon
   Future<void> _addGeofenceLayer() async {
     if (mapController == null) {
+      print('mapController is null, retrying _addGeofenceLayer...');
       Future.delayed(const Duration(milliseconds: 100), _addGeofenceLayer);
       return;
     }
+    print('Adding geofence layer.');
 
     List<LatLng> circlePolygon = _createCirclePolygon(geofenceCenter, geofenceRadius);
 
@@ -101,10 +103,11 @@ class GeofencingMapState extends State<GeofencingMap> {
     for (int i = 0; i <= points; i++) {
       double bearing = i * 2 * pi / points;
       double latRadians = asin(sin(lat) * cos(d) + cos(lat) * sin(d) * cos(bearing));
-      double lngRadians = lng + atan2(
-        sin(bearing) * sin(d) * cos(lat),
-        cos(d) - sin(lat) * sin(latRadians),
-      );
+      double lngRadians = lng +
+          atan2(
+            sin(bearing) * sin(d) * cos(lat),
+            cos(d) - sin(lat) * sin(latRadians),
+          );
 
       positions.add(LatLng(latRadians * (180.0 / pi), lngRadians * (180.0 / pi)));
     }
@@ -130,35 +133,41 @@ class GeofencingMapState extends State<GeofencingMap> {
 
   // Initialize the map controller and add the geofence when the map is created
   void _onMapCreated(MapLibreMapController controller) {
+    print('Map has been created.');
     mapController = controller;
     _addGeofenceLayer();
   }
 
-  @override
-Widget build(BuildContext context) {
-  return Stack(
-    children: [
-      MapLibreMap(
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: geofenceCenter,
-          zoom: 14.0,
-        ),
-        // styleString: "https://api.maptiler.com/maps/streets-v2/style.json?key=QBMCVBrM2oLPkQgiPdQV",
-        rotateGesturesEnabled: true,
-      ),
-      const Positioned(
-        bottom: 10,
-        right: 10,
-        child: Text(
-          "© OpenStreetMap contributors",
-          style: TextStyle(color: Colors.black54, fontSize: 12),
-        ),
-      ),
-    ],
-  );
-}
+  void _onStyleLoaded() {
+    print('Map style has been loaded.');
+    _addGeofenceLayer();
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        MapLibreMap(
+          onMapCreated: _onMapCreated,
+          onStyleLoadedCallback: _onStyleLoaded,
+          initialCameraPosition: CameraPosition(
+            target: geofenceCenter,
+            zoom: 14.0,
+          ),
+          styleString: "https://api.maptiler.com/maps/streets-v2/style.json?key=QBMCVBrM2oLPkQgiPdQV",
+          rotateGesturesEnabled: true,
+        ),
+        const Positioned(
+          bottom: 10,
+          right: 10,
+          child: Text(
+            "© OpenStreetMap contributors",
+            style: TextStyle(color: Colors.black54, fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   void dispose() {
