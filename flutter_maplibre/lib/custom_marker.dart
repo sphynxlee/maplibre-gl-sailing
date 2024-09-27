@@ -99,6 +99,7 @@ class CustomMarkerState extends State<CustomMarker> {
           initialCameraPosition:
               const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
           iosLongClickDuration: const Duration(milliseconds: 200),
+          rotateGesturesEnabled: true,
         ),
         IgnorePointer(
             ignoring: true,
