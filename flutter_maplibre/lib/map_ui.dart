@@ -462,7 +462,7 @@ class MapUiBodyState extends State<MapUiBody> {
         Center(
           child: SizedBox(
             width: _mapExpanded ? null : 300.0,
-            height: 200.0,
+            height: 500.0,
             child: maplibreMap,
           ),
         ),
