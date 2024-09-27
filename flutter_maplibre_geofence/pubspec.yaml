@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  maplibre_gl: ^0.20.0
+  location: ^5.0.0
+  geolocator: ^9.0.2  # Add this line
 
 dev_dependencies:
   flutter_test:
