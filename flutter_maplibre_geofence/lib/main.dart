@@ -144,7 +144,8 @@ Widget build(BuildContext context) {
           target: geofenceCenter,
           zoom: 14.0,
         ),
-        styleString: "https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV",
+        // styleString: "https://api.maptiler.com/maps/streets-v2/style.json?key=QBMCVBrM2oLPkQgiPdQV",
+        rotateGesturesEnabled: true,
       ),
       const Positioned(
         bottom: 10,
