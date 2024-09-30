@@ -28,6 +28,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   Line? edgeLine;
 
   Location location = Location();
+  LocationData? currentLocation;
   String TAG = "===== PolygonGeofence =====";
 
   @override
@@ -36,10 +37,25 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     if (widget.mapController != null) {
       _addGeofenceLayer();
     }
+
+    Future<void> _addUserMarker() async {
+      if (currentLocation != null) {
+        await widget.mapController!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
+            iconImage: 'user-marker', // Ensure this icon exists in your map style
+          ),
+        );
+      }
+    }
+
     // Listen to location changes
-    location.onLocationChanged.listen((LocationData currentLocation) {
-      print('$TAG, Location updated: ${currentLocation.latitude}, ${currentLocation.longitude}');
-      _checkGeofence(LatLng(currentLocation.latitude!, currentLocation.longitude!));
+    location.onLocationChanged.listen((LocationData newLocation) {
+      print('$TAG, Location updated: ${newLocation.latitude}, ${newLocation.longitude}');
+      setState(() {
+        currentLocation = newLocation; // Update the state using setState
+      });
+      _checkGeofence(LatLng(newLocation.latitude!, newLocation.longitude!));
     });
   }
 
@@ -143,26 +159,22 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   }
 
   Future<int?> _findNearestEdge(Point<num> tapPoint) async {
-  const double threshold = 20.0; // pixels
-  for (int i = 0; i < geofencePolygon.length - 1; i++) {
-    LatLng point1 = geofencePolygon[i];
-    LatLng point2 = geofencePolygon[i + 1];
+    const double threshold = 20.0; // pixels
+    for (int i = 0; i < geofencePolygon.length - 1; i++) {
+      LatLng point1 = geofencePolygon[i];
+      LatLng point2 = geofencePolygon[i + 1];
 
-    // Convert LatLng to screen coordinates
-    Point<num> screenPoint1 = await widget.mapController!.toScreenLocation(point1);
-    Point<num> screenPoint2 = await widget.mapController!.toScreenLocation(point2);
+      // Convert LatLng to screen coordinates
+      Point<num> screenPoint1 = await widget.mapController!.toScreenLocation(point1);
+      Point<num> screenPoint2 = await widget.mapController!.toScreenLocation(point2);
 
-    // Check if the tap point is near the edge
-    if (_isPointNearLine(
-        point: tapPoint,
-        lineStart: screenPoint1,
-        lineEnd: screenPoint2,
-        threshold: threshold)) {
-      return i; // Return the index of the edge
+      // Check if the tap point is near the edge
+      if (_isPointNearLine(point: tapPoint, lineStart: screenPoint1, lineEnd: screenPoint2, threshold: threshold)) {
+        return i; // Return the index of the edge
+      }
     }
+    return null;
   }
-  return null;
-}
 
   bool _isPointNearLine({
     required Point<num> point,
@@ -252,8 +264,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     bool oddNodes = false;
 
     for (i = 0; i < polygon.length; i++) {
-      if ((polygon[i].latitude < point.latitude && polygon[j].latitude >= point.latitude ||
-           polygon[j].latitude < point.latitude && polygon[i].latitude >= point.latitude) &&
+      if ((polygon[i].latitude < point.latitude && polygon[j].latitude >= point.latitude || polygon[j].latitude < point.latitude && polygon[i].latitude >= point.latitude) &&
           (polygon[i].longitude <= point.longitude || polygon[j].longitude <= point.longitude)) {
         if (polygon[i].longitude + (point.latitude - polygon[i].latitude) / (polygon[j].latitude - polygon[i].latitude) * (polygon[j].longitude - polygon[i].longitude) < point.longitude) {
           oddNodes = !oddNodes;
