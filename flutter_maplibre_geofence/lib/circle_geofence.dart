@@ -17,7 +17,7 @@ class CircleGeofence extends StatefulWidget {
 
 class CircleGeofenceState extends State<CircleGeofence> {
   LatLng geofenceCenter = const LatLng(37.7749, -122.4194); // Example center (San Francisco)
-  double geofenceRadius = 500.0; // 500 meters
+  double geofenceRadius = 500.0; // 500 meters 2
   Fill? geofenceFill; // Store the geofence fill layer
   Location location = Location();
 

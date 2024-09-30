@@ -26,10 +26,10 @@ class GeofenceHomePage extends StatefulWidget {
   const GeofenceHomePage({super.key});
 
   @override
-  _GeofenceHomePageState createState() => _GeofenceHomePageState();
+  GeofenceHomePageState createState() => GeofenceHomePageState();
 }
 
-class _GeofenceHomePageState extends State<GeofenceHomePage> {
+class GeofenceHomePageState extends State<GeofenceHomePage> {
   MapLibreMapController? mapController;
   Location location = Location();
 
@@ -124,7 +124,8 @@ class _GeofenceHomePageState extends State<GeofenceHomePage> {
               target: LatLng(37.7749, -122.4194), // San Francisco
               zoom: 14.0,
             ),
-            styleString: "https://api.maptiler.com/maps/streets-v2/style.json?key=QBMCVBrM2oLPkQgiPdQV",
+            // styleString: "https://api.maptiler.com/maps/streets-v2/style.json?key=QBMCVBrM2oLPkQgiPdQV",
+            styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
             rotateGesturesEnabled: true,
           ),
           geofenceWidget,
