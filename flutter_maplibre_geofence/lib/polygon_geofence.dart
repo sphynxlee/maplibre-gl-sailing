@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:location/location.dart';
-import 'package:geolocator/geolocator.dart';
+// import 'package:geolocator/geolocator.dart';
 
 class PolygonGeofence extends StatefulWidget {
   final MapLibreMapController? mapController;
@@ -16,11 +16,11 @@ class PolygonGeofence extends StatefulWidget {
 
 class _PolygonGeofenceState extends State<PolygonGeofence> {
   List<LatLng> geofencePolygon = [
-    LatLng(37.7749, -122.4194), // Point A
-    LatLng(37.7799, -122.4194), // Point B
-    LatLng(37.7799, -122.4144), // Point C
-    LatLng(37.7749, -122.4144), // Point D
-    LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
+    const LatLng(37.7749, -122.4194), // Point A
+    const LatLng(37.7799, -122.4194), // Point B
+    const LatLng(37.7799, -122.4144), // Point C
+    const LatLng(37.7749, -122.4144), // Point D
+    const LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
   ];
   Fill? geofenceFill; // Store the geofence fill layer
   Location location = Location();
@@ -98,8 +98,7 @@ class _PolygonGeofenceState extends State<PolygonGeofence> {
     bool oddNodes = false;
 
     for (i = 0; i < polygon.length; i++) {
-      if ((polygon[i].longitude < point.longitude && polygon[j].longitude >= point.longitude ||
-           polygon[j].longitude < point.longitude && polygon[i].longitude >= point.longitude) &&
+      if ((polygon[i].longitude < point.longitude && polygon[j].longitude >= point.longitude || polygon[j].longitude < point.longitude && polygon[i].longitude >= point.longitude) &&
           (polygon[i].latitude <= point.latitude || polygon[j].latitude <= point.latitude)) {
         if (polygon[i].latitude + (point.longitude - polygon[i].longitude) / (polygon[j].longitude - polygon[i].longitude) * (polygon[j].latitude - polygon[i].latitude) < point.latitude) {
           oddNodes = !oddNodes;
