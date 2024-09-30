@@ -8,13 +8,13 @@ import 'package:location/location.dart';
 class PolygonGeofence extends StatefulWidget {
   final MapLibreMapController? mapController;
 
-  const PolygonGeofence({Key? key, required this.mapController}) : super(key: key);
+  const PolygonGeofence({super.key, required this.mapController});
 
   @override
-  _PolygonGeofenceState createState() => _PolygonGeofenceState();
+  PolygonGeofenceState createState() => PolygonGeofenceState();
 }
 
-class _PolygonGeofenceState extends State<PolygonGeofence> {
+class PolygonGeofenceState extends State<PolygonGeofence> {
   List<LatLng> geofencePolygon = [
     const LatLng(37.7749, -122.4194), // Point A
     const LatLng(37.7799, -122.4194), // Point B

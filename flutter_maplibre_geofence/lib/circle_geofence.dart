@@ -9,13 +9,13 @@ import 'dart:math'; // For math functions
 class CircleGeofence extends StatefulWidget {
   final MapLibreMapController? mapController;
 
-  const CircleGeofence({Key? key, required this.mapController}) : super(key: key);
+  const CircleGeofence({super.key, required this.mapController});
 
   @override
-  _CircleGeofenceState createState() => _CircleGeofenceState();
+  CircleGeofenceState createState() => CircleGeofenceState();
 }
 
-class _CircleGeofenceState extends State<CircleGeofence> {
+class CircleGeofenceState extends State<CircleGeofence> {
   LatLng geofenceCenter = const LatLng(37.7749, -122.4194); // Example center (San Francisco)
   double geofenceRadius = 500.0; // 500 meters
   Fill? geofenceFill; // Store the geofence fill layer
