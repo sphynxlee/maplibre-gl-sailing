@@ -75,6 +75,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
   void _onStyleLoaded() {
     addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+    addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
     print('Map style has been loaded.');
   }
 

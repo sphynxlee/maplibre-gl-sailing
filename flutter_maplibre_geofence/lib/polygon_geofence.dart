@@ -29,6 +29,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
 
   Location location = Location();
   LocationData? currentLocation;
+  Symbol? userMarker;
   String TAG = "===== PolygonGeofence =====";
 
   @override
@@ -36,16 +37,8 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     super.initState();
     if (widget.mapController != null) {
       _addGeofenceLayer();
-    }
-
-    Future<void> _addUserMarker() async {
       if (currentLocation != null) {
-        await widget.mapController!.addSymbol(
-          SymbolOptions(
-            geometry: LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
-            iconImage: 'user-marker', // Ensure this icon exists in your map style
-          ),
-        );
+        _addUserMarker();
       }
     }
 
@@ -53,9 +46,18 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     location.onLocationChanged.listen((LocationData newLocation) {
       print('$TAG, Location updated: ${newLocation.latitude}, ${newLocation.longitude}');
       setState(() {
-        currentLocation = newLocation; // Update the state using setState
+        // currentLocation = newLocation;
+        currentLocation = LocationData.fromMap({
+          'latitude': 37.7739,
+          'longitude': -122.4194,
+        });
       });
       _checkGeofence(LatLng(newLocation.latitude!, newLocation.longitude!));
+
+      // Add or update the user marker if mapController is available
+      if (widget.mapController != null) {
+        _addUserMarker();
+      }
     });
   }
 
@@ -64,6 +66,31 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mapController == null && widget.mapController != null) {
       _addGeofenceLayer();
+      if (currentLocation != null) {
+        _addUserMarker();
+      }
+    }
+  }
+
+  Future<void> _addUserMarker() async {
+    if (currentLocation != null && widget.mapController != null) {
+      if (userMarker == null) {
+        // First time, add the symbol
+        userMarker = await widget.mapController!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
+            iconImage: 'user-marker', // Ensure this icon exists in your map style
+          ),
+        );
+      } else {
+        // Update existing symbol's position
+        await widget.mapController!.updateSymbol(
+          userMarker!,
+          SymbolOptions(
+            geometry: LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
+          ),
+        );
+      }
     }
   }
 
@@ -286,6 +313,10 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     // Remove markers
     if (vertexMarkers.isNotEmpty) {
       widget.mapController?.removeSymbols(vertexMarkers);
+    }
+    // Remove user marker
+    if (userMarker != null && widget.mapController != null) {
+      widget.mapController?.removeSymbol(userMarker!);
     }
     // Remove line
     if (edgeLine != null && widget.mapController != null) {
