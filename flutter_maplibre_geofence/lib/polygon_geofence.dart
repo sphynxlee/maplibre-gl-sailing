@@ -88,7 +88,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
       Symbol marker = await widget.mapController!.addSymbol(
         SymbolOptions(
           geometry: point,
-          iconImage: 'marker-15', // Ensure this icon is available in your style
+          iconImage: 'custom-marker', // Ensure this icon is available in your style
           draggable: true,
         ),
       );
@@ -106,8 +106,8 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     );
 
     // Adjust the camera to fit the polygon
-    LatLngBounds bounds = _getPolygonBounds(geofencePolygon);
-    widget.mapController!.moveCamera(CameraUpdate.newLatLngBounds(bounds));
+    // LatLngBounds bounds = _getPolygonBounds(geofencePolygon);
+    // widget.mapController!.moveCamera(CameraUpdate.newLatLngBounds(bounds));
   }
 
   void _onSymbolTapped(Symbol symbol) {

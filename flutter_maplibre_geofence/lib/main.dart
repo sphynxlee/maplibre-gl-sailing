@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:location/location.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'circle_geofence.dart';
 import 'polygon_geofence.dart';
@@ -73,7 +74,15 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   }
 
   void _onStyleLoaded() {
+    addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
     print('Map style has been loaded.');
+  }
+
+  // Adds an asset image to the currently displayed style
+  Future<void> addImageFromAsset(String name, String assetName) async {
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
+    return mapController!.addImage(name, list);
   }
 
   void _selectGeofence(String geofenceType) {
