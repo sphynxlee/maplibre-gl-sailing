@@ -28,6 +28,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   Line? edgeLine;
 
   Location location = Location();
+  String TAG = "===== PolygonGeofence =====";
 
   @override
   void initState() {
@@ -37,7 +38,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     }
     // Listen to location changes
     location.onLocationChanged.listen((LocationData currentLocation) {
-      print("Location updated: ${currentLocation.latitude}, ${currentLocation.longitude}");
+      print('$TAG, Location updated: ${currentLocation.latitude}, ${currentLocation.longitude}');
       _checkGeofence(LatLng(currentLocation.latitude!, currentLocation.longitude!));
     });
   }
@@ -55,7 +56,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     if (widget.mapController == null) {
       return;
     }
-    print('Adding polygon geofence layer.');
+    print('$TAG, Adding polygon geofence layer.');
 
     // Remove existing fills, markers, and lines if they exist
     if (geofenceFill != null) {
@@ -240,9 +241,9 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   // Check if the user's current location is inside the geofence polygon
   void _checkGeofence(LatLng userLocation) {
     if (_isPointInPolygon(userLocation, geofencePolygon)) {
-      print("User is inside the geofence");
+      print('$TAG, User is inside the geofence');
     } else {
-      print("User is outside the geofence");
+      print('$TAG, User is outside the geofence');
     }
   }
 
