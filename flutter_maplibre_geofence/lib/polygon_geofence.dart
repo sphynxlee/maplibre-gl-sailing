@@ -69,6 +69,9 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
       if (currentLocation != null) {
         _addUserMarker();
       }
+      widget.mapController!.onSymbolTapped.add(_onSymbolTapped);
+      // widget.mapController!.onSymbolDrag.add(_onSymbolDrag);
+      // widget.mapController!.onSymbolDragEnd.add(_onSymbolDragEnd);
     }
   }
 
@@ -154,7 +157,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   }
 
   void _onSymbolTapped(Symbol symbol) {
-    // Handle symbol tap if needed
+    print('$TAG, Symbol tapped: ${symbol.id}');
   }
 
   void _onSymbolDrag(Symbol symbol) {
@@ -169,6 +172,20 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   void _onSymbolDragEnd(Symbol symbol) {
     // Finalize the drag
     _onSymbolDrag(symbol);
+  }
+
+  void handleMapClick(Point<double> point, LatLng coordinates) async {
+    if (widget.mapController == null) return;
+
+    // Check if the tap is near any edge
+    int? nearestEdgeIndex = await _findNearestEdge(point);
+    if (nearestEdgeIndex != null) {
+      // Insert new vertex into the polygon
+      setState(() {
+        geofencePolygon.insert(nearestEdgeIndex + 1, coordinates);
+      });
+      await _addGeofenceLayer(); // Re-add the geofence layer
+    }
   }
 
   void _onMapClick(Point<double> point, LatLng coordinates) async {

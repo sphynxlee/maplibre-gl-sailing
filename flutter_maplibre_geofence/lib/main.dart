@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:location/location.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'dart:math';
 
 import 'circle_geofence.dart';
 import 'polygon_geofence.dart';
@@ -35,6 +36,8 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   Location location = Location();
 
   String _selectedGeofence = 'none'; // 'none', 'circle', 'polygon'
+
+  final GlobalKey<PolygonGeofenceState> _polygonGeofenceKey = GlobalKey();
 
   @override
   void initState() {
@@ -92,6 +95,24 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     });
   }
 
+  void _onMapClick(Point<double> point, LatLng coordinates) {
+    if (_selectedGeofence == 'polygon' && _polygonGeofenceKey.currentState != null) {
+      _polygonGeofenceKey.currentState!.handleMapClick(point, coordinates);
+    }
+  }
+
+  void _onSymbolDrag(Symbol symbol) {
+    if (_selectedGeofence == 'polygon' && _polygonGeofenceKey.currentState != null) {
+      // _polygonGeofenceKey.currentState!.handleSymbolDrag(symbol);
+    }
+  }
+
+  void _onSymbolDragEnd(Symbol symbol) {
+    if (_selectedGeofence == 'polygon' && _polygonGeofenceKey.currentState != null) {
+      // _polygonGeofenceKey.currentState!.handleSymbolDragEnd(symbol);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget geofenceWidget;
@@ -99,7 +120,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     if (_selectedGeofence == 'circle') {
       geofenceWidget = CircleGeofence(mapController: mapController);
     } else if (_selectedGeofence == 'polygon') {
-      geofenceWidget = PolygonGeofence(mapController: mapController);
+      geofenceWidget = PolygonGeofence(key: _polygonGeofenceKey, mapController: mapController);
     } else {
       geofenceWidget = Container(); // Empty container when no geofence is selected
     }
@@ -130,6 +151,9 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
           MapLibreMap(
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
+            onMapClick: _onMapClick,
+            // onSymbolDrag: _onSymbolDrag,
+            // onSymbolDragEnd: _onSymbolDragEnd,
             initialCameraPosition: const CameraPosition(
               target: LatLng(37.7749, -122.4194), // San Francisco
               zoom: 14.0,
