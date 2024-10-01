@@ -4,7 +4,6 @@ import 'package:location/location.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
 
-import 'circle_geofence.dart';
 import 'polygon_geofence.dart';
 
 void main() => runApp(const MyApp());
@@ -34,10 +33,6 @@ class GeofenceHomePage extends StatefulWidget {
 class GeofenceHomePageState extends State<GeofenceHomePage> {
   MapLibreMapController? mapController;
   Location location = Location();
-
-  String _selectedGeofence = 'none'; // 'none', 'circle', 'polygon'
-
-  final GlobalKey<PolygonGeofenceState> _polygonGeofenceKey = GlobalKey();
 
   @override
   void initState() {
@@ -89,62 +84,19 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     return mapController!.addImage(name, list);
   }
 
-  void _selectGeofence(String geofenceType) {
-    setState(() {
-      _selectedGeofence = geofenceType;
-    });
-  }
-
   void _onMapClick(Point<double> point, LatLng coordinates) {
-    if (_selectedGeofence == 'polygon' && _polygonGeofenceKey.currentState != null) {
-      _polygonGeofenceKey.currentState!.handleMapClick(point, coordinates);
-    }
-  }
-
-  void _onSymbolDrag(Symbol symbol) {
-    if (_selectedGeofence == 'polygon' && _polygonGeofenceKey.currentState != null) {
-      // _polygonGeofenceKey.currentState!.handleSymbolDrag(symbol);
-    }
-  }
-
-  void _onSymbolDragEnd(Symbol symbol) {
-    if (_selectedGeofence == 'polygon' && _polygonGeofenceKey.currentState != null) {
-      // _polygonGeofenceKey.currentState!.handleSymbolDragEnd(symbol);
-    }
+    print('Map click at: $coordinates');
   }
 
   @override
   Widget build(BuildContext context) {
     Widget geofenceWidget;
 
-    if (_selectedGeofence == 'circle') {
-      geofenceWidget = CircleGeofence(mapController: mapController);
-    } else if (_selectedGeofence == 'polygon') {
-      geofenceWidget = PolygonGeofence(key: _polygonGeofenceKey, mapController: mapController);
-    } else {
-      geofenceWidget = Container(); // Empty container when no geofence is selected
-    }
+  geofenceWidget = PolygonGeofence(mapController: mapController);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Geofence Demo'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: _selectGeofence,
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem<String>(
-                  value: 'circle',
-                  child: Text('Circle Geofence'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'polygon',
-                  child: Text('Polygon Geofence'),
-                ),
-              ];
-            },
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -152,8 +104,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
             onMapClick: _onMapClick,
-            // onSymbolDrag: _onSymbolDrag,
-            // onSymbolDragEnd: _onSymbolDragEnd,
             initialCameraPosition: const CameraPosition(
               target: LatLng(37.7749, -122.4194), // San Francisco
               zoom: 14.0,
