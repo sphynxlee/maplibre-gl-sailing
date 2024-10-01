@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
 
 void main() => runApp(const MyApp());
@@ -47,6 +48,19 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     addDragListener();
   }
 
+  void _onStyleLoaded() {
+    addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+    addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
+    print('Map style has been loaded.');
+  }
+
+  // Adds an asset image to the currently displayed style
+  Future<void> addImageFromAsset(String name, String assetName) async {
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
+    return mapController!.addImage(name, list);
+  }
+
   void addPolygon() async {
     polygonFill = await mapController?.addFill(
       FillOptions(
@@ -62,7 +76,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       Symbol marker = await mapController!.addSymbol(
         SymbolOptions(
           geometry: point,
-          iconImage: "custom-marker", // Ensure this is properly defined in pubspec.yaml
+          iconImage: 'custom-marker', // Ensure this icon is available in your style
           draggable: true,
         ),
       );
@@ -119,10 +133,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     return Scaffold(
       body: MapLibreMap(
         onMapCreated: _onMapCreated,
+        onStyleLoadedCallback: _onStyleLoaded,
         initialCameraPosition: const CameraPosition(
           target: LatLng(37.7749, -122.4194), // San Francisco
-          zoom: 12.0,
+          zoom: 14.0,
         ),
+        styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
       ),
     );
   }
