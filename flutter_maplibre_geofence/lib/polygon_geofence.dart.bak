@@ -112,7 +112,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
     }
 
     // Add the polygon fill
-    geofenceFill = await widget.mapController?.addFill(
+    geofenceFill = await widget.mapController!.addFill(
       FillOptions(
         geometry: [geofencePolygon],
         fillColor: "#FF0000",

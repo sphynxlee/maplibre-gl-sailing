@@ -43,6 +43,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   void _onMapCreated(MapLibreMapController controller) {
     this.controller = controller;
     controller.onSymbolTapped.add(_onSymbolTapped);
+    controller.onFeatureDrag.add(_onFeatureDrag);
   }
 
   void _onStyleLoaded() {
@@ -56,6 +57,16 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   void dispose() {
     controller?.onSymbolTapped.remove(_onSymbolTapped);
     super.dispose();
+  }
+
+  _onFeatureDrag(dynamic id,
+      {required Point<double> point,
+      required LatLng origin,
+      required LatLng current,
+      required LatLng delta,
+      required DragEventType eventType}) {
+    print('Feature with id: $id is being called');
+    _getLatLng();
   }
 
   /// Adds an asset image to the currently displayed style
