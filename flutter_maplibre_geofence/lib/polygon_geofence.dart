@@ -98,8 +98,11 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
   // Add geofence polygon to the map as a fill
   Future<void> _addGeofenceLayer() async {
     if (widget.mapController == null) {
+      print('$TAG, MapController is null, cannot add geofence layer.');
       return;
     }
+
+    // Proceed with the rest of your logic
     print('$TAG, Adding polygon geofence layer.');
 
     // Remove existing fills, markers, and lines if they exist
@@ -107,18 +110,9 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
       await widget.mapController!.removeFill(geofenceFill!);
       geofenceFill = null;
     }
-    if (vertexMarkers.isNotEmpty) {
-      await widget.mapController!.removeSymbols(vertexMarkers);
-      vertexMarkers.clear();
-      symbolIdToIndex.clear();
-    }
-    if (edgeLine != null) {
-      await widget.mapController!.removeLine(edgeLine!);
-      edgeLine = null;
-    }
 
     // Add the polygon fill
-    geofenceFill = await widget.mapController!.addFill(
+    geofenceFill = await widget.mapController?.addFill(
       FillOptions(
         geometry: [geofencePolygon],
         fillColor: "#FF0000",
@@ -132,11 +126,11 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
       Symbol marker = await widget.mapController!.addSymbol(
         SymbolOptions(
           geometry: point,
-          iconImage: 'custom-marker', // Ensure this icon is available in your style
+          iconImage: 'custom-marker',
           draggable: true,
         ),
       );
-      symbolIdToIndex[marker.id] = i; // Map symbol ID to index
+      symbolIdToIndex[marker.id] = i;
       vertexMarkers.add(marker);
     }
 
@@ -149,7 +143,7 @@ class PolygonGeofenceState extends State<PolygonGeofence> {
       ),
     );
 
-    // Adjust the camera to fit the polygon
+    // Adjust the camera to fit the polygon (if needed)
     // LatLngBounds bounds = _getPolygonBounds(geofencePolygon);
     // widget.mapController!.moveCamera(CameraUpdate.newLatLngBounds(bounds));
   }
