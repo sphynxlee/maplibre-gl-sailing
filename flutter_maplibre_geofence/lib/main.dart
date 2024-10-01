@@ -138,7 +138,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
           target: LatLng(37.7749, -122.4194), // San Francisco
           zoom: 14.0,
         ),
-        styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
+        // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
       ),
     );
   }
