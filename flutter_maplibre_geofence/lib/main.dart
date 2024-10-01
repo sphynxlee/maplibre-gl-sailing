@@ -97,16 +97,14 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     orElse: () => markers.isNotEmpty ? markers.first : throw Exception('Marker not found'),
   );
 
-  if (draggedMarker != null) {
-    int index = markers.indexOf(draggedMarker);
-    if (index != -1) {
-      setState(() {
-        // Update the polygon point using the current LatLng of the marker.
-        geofencePolygon[index] = current;
-        // Update the polygon on the map.
-        updatePolygon();
-      });
-    }
+  int index = markers.indexOf(draggedMarker);
+  if (index != -1) {
+    setState(() {
+      // Update the polygon point using the current LatLng of the marker.
+      geofencePolygon[index] = current;
+      // Update the polygon on the map.
+      updatePolygon();
+    });
   }
 }
 
