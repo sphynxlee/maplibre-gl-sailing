@@ -11,7 +11,7 @@
             "program": "lib/main.dart",
             "args": [
                 "--dart-define",
-                "ACCESS_TOKEN=sk.eyJ1Ijoic3BoeW54bGVlIiwiYSI6ImNtMXF1eWhlZDA0M3Iya29menh1MTBjYjgifQ.0nWqrJWJ8Kc63wjF8FOhvg"
+                "ACCESS_TOKEN=my_token"
             ],
 
         },
