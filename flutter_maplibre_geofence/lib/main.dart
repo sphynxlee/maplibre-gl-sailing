@@ -3,7 +3,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
 
-void main() => runApp(const MyApp());
+void main() => runApp(const MaterialApp(home: MyApp()));
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
 
 class GeofenceHomePage extends StatefulWidget {
   const GeofenceHomePage({super.key});
+
   @override
   GeofenceHomePageState createState() => GeofenceHomePageState();
 }
@@ -91,12 +92,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     }
   }
 
-  void _onFeatureDrag(dynamic id,
-      {required Point<double> point,
-      required LatLng origin,
-      required LatLng current,
-      required LatLng delta,
-      required DragEventType eventType}) {
+  void _onFeatureDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     int index = markers.indexWhere((marker) => marker.id == id);
 
     if (index != -1) {
@@ -131,14 +127,18 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MapLibreMap(
-        onMapCreated: _onMapCreated,
-        onStyleLoadedCallback: _onStyleLoaded,
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(37.7749, -122.4194), // San Francisco
-          zoom: 14.0,
+      body: SizedBox(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        child: MapLibreMap(
+          onMapCreated: _onMapCreated,
+          onStyleLoadedCallback: _onStyleLoaded,
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(37.7749, -122.4194), // San Francisco
+            zoom: 14.0,
+          ),
+          styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
         ),
-        styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
       ),
     );
   }
