@@ -9,6 +9,8 @@
 .history
 .svn/
 migrate_working_dir/
+.vscode
+flutter_logs.txt
 
 # IntelliJ related
 *.iml
