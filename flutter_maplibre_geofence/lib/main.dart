@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
+import 'dart:ui_web' as ui;
+import 'dart:html';
 
-void main() => runApp(const MaterialApp(home: MyApp()));
+void main() {
+  ui.platformViewRegistry.registerViewFactory('example', (_) => DivElement()..innerText = 'Hello, HTML!');
+  runApp(const MaterialApp(home: MyApp()));
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -17,6 +22,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const GeofenceHomePage(),
     );
+
   }
 }
 
@@ -51,12 +57,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     setState(() {
       mapController = controller;
     });
-    addPolygon();
+    // addPolygon();
     addMarkers();
-    addDragListener();
+    // addDragListener();
   }
 
-  Future<void> _onStyleLoaded() async {
+  Future<void> _onStyleLoadedCallback() async {
     await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
     print('Map style has been loaded.');
   }
@@ -132,12 +138,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
         width: MediaQuery.of(context).size.width,
         child: MapLibreMap(
           onMapCreated: _onMapCreated,
-          onStyleLoadedCallback: _onStyleLoaded,
+          onStyleLoadedCallback: _onStyleLoadedCallback,
           initialCameraPosition: const CameraPosition(
             target: LatLng(37.7749, -122.4194), // San Francisco
             zoom: 14.0,
           ),
-          styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
+          // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
         ),
       ),
     );
