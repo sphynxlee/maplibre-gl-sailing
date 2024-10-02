@@ -50,9 +50,9 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     setState(() {
       mapController = controller;
     });
-    // addPolygon();
-    // addMarkers();
-    // addDragListener();
+    addPolygon();
+    addMarkers();
+    addDragListener();
   }
 
   Future<void> _onStyleLoaded() async {
