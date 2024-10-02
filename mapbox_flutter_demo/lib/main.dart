@@ -18,5 +18,7 @@ void main() {
   // Run your application, passing your CameraOptions to the MapWidget
   runApp(MaterialApp(home: MapWidget(
     cameraOptions: camera,
+    // styleUri: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
+    styleUri: 'https://api.maptiler.com/maps/ocean/style.json?key=QBMCVBrM2oLPkQgiPdQV',
   )));
 }
