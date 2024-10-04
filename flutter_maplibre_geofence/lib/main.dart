@@ -43,6 +43,9 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   List<Line> lines = [];
   Fill? polygonFill;
 
+  Symbol? selectedLineSymbol;
+  int? selectedLineIndex;
+
   List<LatLng> mockGeofencePolygon = [
     const LatLng(37.7749, -122.4194), // Point A
     const LatLng(37.7799, -122.4194), // Point B
@@ -54,6 +57,9 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   @override
   void dispose() {
     mapController?.onFeatureDrag.remove(_onFeatureDrag);
+    mapController?.onFeatureDrag.remove(_onMidpointDrag);
+    mapController?.onLineTapped.remove(_onLineTapped);
+    mapController?.onSymbolTapped.remove(_onSymbolTapped);
     super.dispose();
   }
 
@@ -107,12 +113,14 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   Future<void> updatePolygon() async {
     try {
       if (polygonFill != null) {
-        await mapController?.updateFill(polygonFill!, FillOptions(
-          geometry: [geofencePolygon],
-          fillColor: "#FF0000",
-          fillOpacity: 0.5,
-          fillOutlineColor: "#000000",
-        ));
+        await mapController?.updateFill(
+            polygonFill!,
+            FillOptions(
+              geometry: [geofencePolygon],
+              fillColor: "#FF0000",
+              fillOpacity: 0.5,
+              fillOutlineColor: "#000000",
+            ));
       } else {
         polygonFill = await mapController?.addFill(
           FillOptions(
@@ -176,8 +184,71 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
         );
         lines.add(line);
       }
+
+      // Add tap listener to lines
+      mapController?.onLineTapped.add(_onLineTapped);
     } catch (e) {
       print('Error updating lines: $e');
+    }
+  }
+
+  void _onLineTapped(Line line) {
+    int index = lines.indexOf(line);
+    if (index != -1) {
+      _addMidpointSymbol(index);
+    }
+  }
+
+  Future<void> _addMidpointSymbol(int lineIndex) async {
+    // Remove previous selected line symbol if exists
+    if (selectedLineSymbol != null) {
+      await mapController?.removeSymbol(selectedLineSymbol!);
+      selectedLineSymbol = null;
+    }
+
+    LatLng start = geofencePolygon[lineIndex];
+    LatLng end = geofencePolygon[(lineIndex + 1) % geofencePolygon.length];
+    LatLng midpoint = LatLng(
+      (start.latitude + end.latitude) / 2,
+      (start.longitude + end.longitude) / 2,
+    );
+
+    selectedLineSymbol = await mapController!.addSymbol(
+      SymbolOptions(
+        geometry: midpoint,
+        iconImage: 'custom-marker',
+        iconSize: 1.5,
+        draggable: true,
+      ),
+    );
+    selectedLineIndex = lineIndex;
+
+    // Add drag listener to the new symbol
+    mapController?.onSymbolTapped.add(_onSymbolTapped);
+  }
+
+  void _onSymbolTapped(Symbol symbol) {
+    if (symbol == selectedLineSymbol) {
+      mapController?.onFeatureDrag.add(_onMidpointDrag);
+    }
+  }
+
+  void _onMidpointDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
+    if (id == selectedLineSymbol?.id && selectedLineIndex != null) {
+      if (eventType == DragEventType.drag) {
+        setState(() {
+          // Insert the new point into the geofencePolygon
+          geofencePolygon.insert(selectedLineIndex! + 1, current);
+          updatePolygon();
+          updateMarkers();
+        });
+      } else if (eventType == DragEventType.end) {
+        // Remove the midpoint symbol and reset selection
+        mapController?.removeSymbol(selectedLineSymbol!);
+        selectedLineSymbol = null;
+        selectedLineIndex = null;
+        mapController?.onFeatureDrag.remove(_onMidpointDrag);
+      }
     }
   }
 
