@@ -147,6 +147,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
             draggable: true,
           ),
         );
+        mapController!.setSymbolIconAllowOverlap(true);
         markers.add(marker);
       }
     } catch (e) {

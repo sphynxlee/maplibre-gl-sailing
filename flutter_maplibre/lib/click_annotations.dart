@@ -92,6 +92,22 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     );
     controller!.addCircle(
       const CircleOptions(
+        geometry: LatLng(-33.874372606072309, 151.874372606072309),
+        circleStrokeColor: "#00FF00",
+        circleStrokeWidth: 2,
+        circleRadius: 30,
+      ),
+    );
+    controller!.addSymbol(
+      const SymbolOptions(
+          geometry: LatLng(-33.874372606072309, 151.874372606072309),
+          iconImage: "custom-marker", //"fast-food-15",
+          draggable: true,
+          iconSize: 2),
+    );
+    controller!.setSymbolIconAllowOverlap(true);
+    controller!.addCircle(
+      const CircleOptions(
         geometry: LatLng(-33.894372606072309, 151.17576679759523),
         circleStrokeColor: "#00FF00",
         circleStrokeWidth: 2,
