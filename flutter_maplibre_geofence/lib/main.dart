@@ -85,8 +85,8 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     });
 
     // Update the polygon on the map
-    updatePolygon();
     updateMarkers();
+    updatePolygon();
   }
 
   Future<void> _onStyleLoadedCallback() async {
@@ -139,7 +139,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
             iconImage: 'custom-marker',
             iconSize: 2.0,
             draggable: true,
-            zIndex: 2,
+            zIndex: 3,
           ),
         );
         markers.add(marker);
@@ -177,6 +177,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
         child: MapLibreMap(
+          annotationOrder: const [
+            AnnotationType.fill,
+            AnnotationType.line,
+            AnnotationType.circle,
+            AnnotationType.symbol,
+          ],
           onMapCreated: _onMapCreated,
           onStyleLoadedCallback: _onStyleLoadedCallback,
           initialCameraPosition: const CameraPosition(

@@ -102,6 +102,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
       const SymbolOptions(
           geometry: LatLng(-33.894372606072309, 151.17576679759523),
           iconImage: "custom-marker", //"fast-food-15",
+          draggable: true,
           iconSize: 2),
     );
     controller!.addLine(
