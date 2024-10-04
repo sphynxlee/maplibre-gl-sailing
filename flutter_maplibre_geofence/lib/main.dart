@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
-import 'dart:ui_web' as ui;
-import 'dart:html';
+
+// import 'package:flutter/foundation.dart' show kIsWeb;
+// import './common/service/web_specific_code.dart' if (dart.library.io) 'mobile_specific_code.dart';
 
 void main() {
-  ui.platformViewRegistry.registerViewFactory('example', (_) => DivElement()..innerText = 'Hello, HTML!');
+  // if (kIsWeb) {
+  //   initializeForWeb();
+  // }
   runApp(const MaterialApp(home: MyApp()));
 }
 
@@ -22,7 +25,6 @@ class MyApp extends StatelessWidget {
       ),
       home: const GeofenceHomePage(),
     );
-
   }
 }
 
@@ -36,13 +38,39 @@ class GeofenceHomePage extends StatefulWidget {
 class GeofenceHomePageState extends State<GeofenceHomePage> {
   MapLibreMapController? mapController;
 
-  List<LatLng> geofencePolygon = [
-    const LatLng(37.7749, -122.4194), // Point A
-    const LatLng(37.7799, -122.4194), // Point B
-    const LatLng(37.7799, -122.4144), // Point C
-    const LatLng(37.7749, -122.4144), // Point D
-    const LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
-  ];
+  // List<LatLng> geofencePolygon = [
+  //   const LatLng(37.7749, -122.4194), // Point A
+  //   const LatLng(37.7799, -122.4194), // Point B
+  //   const LatLng(37.7799, -122.4144), // Point C
+  //   const LatLng(37.7749, -122.4144), // Point D
+  //   const LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
+  // ];
+
+  List<LatLng> geofencePolygon = [];
+
+  void setGeofencePolygon(List<LatLng> coordinates) {
+    setState(() {
+      geofencePolygon = List.from(coordinates);
+      // Ensure the polygon is closed by adding the first point at the end if needed
+      if (geofencePolygon.isNotEmpty && geofencePolygon.first != geofencePolygon.last) {
+        geofencePolygon.add(geofencePolygon.first);
+      }
+    });
+
+    // Update the polygon on the map
+    if (polygonFill != null) {
+      mapController?.updateFill(polygonFill!, FillOptions(geometry: [geofencePolygon]));
+    } else {
+      addPolygon();
+    }
+
+    // Update the markers on the map
+    for (Symbol marker in markers) {
+      mapController?.removeSymbol(marker);
+    }
+    markers.clear();
+    addMarkers();
+  }
 
   List<Symbol> markers = [];
   Fill? polygonFill;
