@@ -40,6 +40,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
   List<LatLng> geofencePolygon = [];
   List<Symbol> markers = [];
+  List<Line> lines = [];
   Fill? polygonFill;
 
   List<LatLng> mockGeofencePolygon = [
@@ -60,8 +61,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     setState(() {
       mapController = controller;
     });
-    // addPolygon();
-    // addMarkers();
 
     // Initialize the geofence polygon
     List<LatLng> initialPolygon = [
@@ -108,16 +107,23 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   Future<void> updatePolygon() async {
     try {
       if (polygonFill != null) {
-        await mapController?.updateFill(polygonFill!, FillOptions(geometry: [geofencePolygon]));
+        await mapController?.updateFill(polygonFill!, FillOptions(
+          geometry: [geofencePolygon],
+          fillColor: "#FF0000",
+          fillOpacity: 0.5,
+          fillOutlineColor: "#000000",
+        ));
       } else {
         polygonFill = await mapController?.addFill(
           FillOptions(
             geometry: [geofencePolygon],
             fillColor: "#FF0000",
             fillOpacity: 0.5,
+            fillOutlineColor: "#000000",
           ),
         );
       }
+      await updateLines();
     } catch (e) {
       print('Error updating polygon: $e');
     }
@@ -139,13 +145,38 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
             iconImage: 'custom-marker',
             iconSize: 2.0,
             draggable: true,
-            zIndex: 3,
           ),
         );
         markers.add(marker);
       }
     } catch (e) {
       print('Error updating markers: $e');
+    }
+  }
+
+  Future<void> updateLines() async {
+    try {
+      // Remove existing lines
+      for (Line line in lines) {
+        await mapController?.removeLine(line);
+      }
+      lines.clear();
+
+      // Add new lines for each edge of the polygon
+      for (int i = 0; i < geofencePolygon.length - 1; i++) {
+        Line line = await mapController!.addLine(
+          LineOptions(
+            geometry: [geofencePolygon[i], geofencePolygon[i + 1]],
+            lineColor: "#0000FF", // Blue color for the lines
+            lineWidth: 3,
+            lineOpacity: 0.7,
+            draggable: false, // Lines are not draggable
+          ),
+        );
+        lines.add(line);
+      }
+    } catch (e) {
+      print('Error updating lines: $e');
     }
   }
 
