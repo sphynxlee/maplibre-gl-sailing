@@ -38,42 +38,17 @@ class GeofenceHomePage extends StatefulWidget {
 class GeofenceHomePageState extends State<GeofenceHomePage> {
   MapLibreMapController? mapController;
 
-  // List<LatLng> geofencePolygon = [
-  //   const LatLng(37.7749, -122.4194), // Point A
-  //   const LatLng(37.7799, -122.4194), // Point B
-  //   const LatLng(37.7799, -122.4144), // Point C
-  //   const LatLng(37.7749, -122.4144), // Point D
-  //   const LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
-  // ];
-
   List<LatLng> geofencePolygon = [];
-
-  void setGeofencePolygon(List<LatLng> coordinates) {
-    setState(() {
-      geofencePolygon = List.from(coordinates);
-      // Ensure the polygon is closed by adding the first point at the end if needed
-      if (geofencePolygon.isNotEmpty && geofencePolygon.first != geofencePolygon.last) {
-        geofencePolygon.add(geofencePolygon.first);
-      }
-    });
-
-    // Update the polygon on the map
-    if (polygonFill != null) {
-      mapController?.updateFill(polygonFill!, FillOptions(geometry: [geofencePolygon]));
-    } else {
-      addPolygon();
-    }
-
-    // Update the markers on the map
-    for (Symbol marker in markers) {
-      mapController?.removeSymbol(marker);
-    }
-    markers.clear();
-    addMarkers();
-  }
-
   List<Symbol> markers = [];
   Fill? polygonFill;
+
+  List<LatLng> mockGeofencePolygon = [
+    const LatLng(37.7749, -122.4194), // Point A
+    const LatLng(37.7799, -122.4194), // Point B
+    const LatLng(37.7799, -122.4144), // Point C
+    const LatLng(37.7749, -122.4144), // Point D
+    const LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
+  ];
 
   @override
   void dispose() {
@@ -86,12 +61,41 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       mapController = controller;
     });
     // addPolygon();
-    addMarkers();
-    // addDragListener();
+    // addMarkers();
+
+    // Initialize the geofence polygon
+    List<LatLng> initialPolygon = [
+      const LatLng(37.7749, -122.4194),
+      const LatLng(37.7799, -122.4194),
+      const LatLng(37.7799, -122.4144),
+      const LatLng(37.7749, -122.4144),
+    ];
+
+    setGeofencePolygon(initialPolygon);
+    addDragListener();
+  }
+
+  void setGeofencePolygon(List<LatLng> coordinates) {
+    setState(() {
+      geofencePolygon = List.from(coordinates);
+      // Ensure the polygon is closed by adding the first point at the end if needed
+      if (geofencePolygon.isNotEmpty && geofencePolygon.first != geofencePolygon.last) {
+        geofencePolygon.add(geofencePolygon.first);
+      }
+    });
+
+    // Update the polygon on the map
+    updatePolygon();
+    updateMarkers();
   }
 
   Future<void> _onStyleLoadedCallback() async {
-    await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+    try {
+      await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+      print('Custom marker image loaded successfully.');
+    } catch (e) {
+      print('Error loading custom marker image: $e');
+    }
     print('Map style has been loaded.');
   }
 
@@ -101,28 +105,47 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     return mapController!.addImage(name, list);
   }
 
-  void addPolygon() async {
-    polygonFill = await mapController?.addFill(
-      FillOptions(
-        geometry: [geofencePolygon],
-        fillColor: "#FF0000",
-        fillOpacity: 0.5,
-      ),
-    );
+  Future<void> updatePolygon() async {
+    try {
+      if (polygonFill != null) {
+        await mapController?.updateFill(polygonFill!, FillOptions(geometry: [geofencePolygon]));
+      } else {
+        polygonFill = await mapController?.addFill(
+          FillOptions(
+            geometry: [geofencePolygon],
+            fillColor: "#FF0000",
+            fillOpacity: 0.5,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error updating polygon: $e');
+    }
   }
 
-  void addMarkers() async {
-    for (LatLng point in geofencePolygon) {
-      Symbol marker = await mapController!.addSymbol(
-        SymbolOptions(
-          geometry: point,
-          iconImage: 'custom-marker',
-          iconSize: 2.0,
-          draggable: true,
-          zIndex: 2,
-        ),
-      );
-      markers.add(marker);
+  Future<void> updateMarkers() async {
+    try {
+      // Remove existing markers
+      for (Symbol marker in markers) {
+        await mapController?.removeSymbol(marker);
+      }
+      markers.clear();
+
+      // Add new markers (excluding the last point if it's a duplicate of the first)
+      for (int i = 0; i < geofencePolygon.length - 1; i++) {
+        Symbol marker = await mapController!.addSymbol(
+          SymbolOptions(
+            geometry: geofencePolygon[i],
+            iconImage: 'custom-marker',
+            iconSize: 2.0,
+            draggable: true,
+            zIndex: 2,
+          ),
+        );
+        markers.add(marker);
+      }
+    } catch (e) {
+      print('Error updating markers: $e');
     }
   }
 
@@ -133,8 +156,11 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       setState(() {
         // Update the geofencePolygon vertex position based on drag event.
         geofencePolygon[index] = current;
+        // If this is the first point, also update the last point to keep the polygon closed
+        if (index == 0) {
+          geofencePolygon[geofencePolygon.length - 1] = current;
+        }
 
-        // Update the polygon fill geometry dynamically.
         updatePolygon();
       });
     }
@@ -142,20 +168,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
   void addDragListener() {
     mapController?.onFeatureDrag.add(_onFeatureDrag);
-  }
-
-  void updatePolygon() async {
-    // Efficient polygon update without full removal
-    if (polygonFill != null) {
-      await mapController!.updateFill(
-        polygonFill!,
-        FillOptions(
-          geometry: [geofencePolygon],
-          fillColor: "#FF0000",
-          fillOpacity: 0.5,
-        ),
-      );
-    }
   }
 
   @override
