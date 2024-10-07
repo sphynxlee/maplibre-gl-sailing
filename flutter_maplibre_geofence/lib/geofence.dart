@@ -21,20 +21,11 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   Symbol? selectedLineSymbol;
   int? selectedLineIndex;
 
-  List<LatLng> mockGeofencePolygon = [
-    const LatLng(37.7749, -122.4194), // Point A
-    const LatLng(37.7799, -122.4194), // Point B
-    const LatLng(37.7799, -122.4144), // Point C
-    const LatLng(37.7749, -122.4144), // Point D
-    const LatLng(37.7749, -122.4194), // Closing the polygon back to Point A
-  ];
-
   @override
   void dispose() {
-    mapController?.onFeatureDrag.remove(_onFeatureDrag);
-    mapController?.onFeatureDrag.remove(_onMidpointDrag);
+    mapController?.onFeatureDrag.remove(_onVertexSymbolDrag);
+    mapController?.onFeatureDrag.remove(_onMidPointSymbolDrag);
     mapController?.onLineTapped.remove(_onLineTapped);
-    mapController?.onSymbolTapped.remove(_onSymbolTapped);
     super.dispose();
   }
 
@@ -45,14 +36,14 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
     // Initialize the geofence polygon
     List<LatLng> initialPolygon = [
-      const LatLng(37.7749, -122.4194),
-      const LatLng(37.7799, -122.4194),
-      const LatLng(37.7799, -122.4144),
-      const LatLng(37.7749, -122.4144),
+      const LatLng(37.7749, -122.4194), // Point A
+      const LatLng(37.7799, -122.4194), // Point B
+      const LatLng(37.7799, -122.4144), // Point C
+      const LatLng(37.7749, -122.4144), // Point D
     ];
 
     setGeofencePolygon(initialPolygon);
-    addDragListener();
+    mapController?.onFeatureDrag.add(_onVertexSymbolDrag);
   }
 
   void setGeofencePolygon(List<LatLng> coordinates) {
@@ -66,12 +57,13 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
     // Update the polygon on the map
     updateMarkers();
-    updatePolygon();
+    updatePolygonFill();
   }
 
   Future<void> _onStyleLoadedCallback() async {
     try {
       await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+      await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
       print('Custom marker image loaded successfully.');
     } catch (e) {
       print('Error loading custom marker image: $e');
@@ -85,7 +77,37 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     return mapController!.addImage(name, list);
   }
 
-  Future<void> updatePolygon() async {
+  Future<void> updateMarkers() async {
+    try {
+      // Remove existing markers
+      for (Symbol marker in markers) {
+        await mapController?.removeSymbol(marker);
+      }
+      markers.clear();
+
+      // Add new markers (excluding the last point if it's a duplicate of the first)
+      for (int i = 0; i < geofencePolygon.length - 1; i++) {
+        Symbol marker = await mapController!.addSymbol(
+          SymbolOptions(
+            geometry: geofencePolygon[i],
+            iconImage: 'custom-marker',
+            iconSize: 2.0,
+            textField: i.toString(),
+            textSize: 20,
+            textColor: '#000000',
+            draggable: true,
+          ),
+        );
+        mapController!.setSymbolIconAllowOverlap(true);
+        markers.add(marker);
+      }
+      print('Markers updated successfully.');
+    } catch (e) {
+      print('Error updating markers: $e');
+    }
+  }
+
+  Future<void> updatePolygonFill() async {
     try {
       if (polygonFill != null) {
         await mapController?.updateFill(
@@ -109,32 +131,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       await updateLines();
     } catch (e) {
       print('Error updating polygon: $e');
-    }
-  }
-
-  Future<void> updateMarkers() async {
-    try {
-      // Remove existing markers
-      for (Symbol marker in markers) {
-        await mapController?.removeSymbol(marker);
-      }
-      markers.clear();
-
-      // Add new markers (excluding the last point if it's a duplicate of the first)
-      for (int i = 0; i < geofencePolygon.length - 1; i++) {
-        Symbol marker = await mapController!.addSymbol(
-          SymbolOptions(
-            geometry: geofencePolygon[i],
-            iconImage: 'custom-marker',
-            iconSize: 2.0,
-            draggable: true,
-          ),
-        );
-        mapController!.setSymbolIconAllowOverlap(true);
-        markers.add(marker);
-      }
-    } catch (e) {
-      print('Error updating markers: $e');
     }
   }
 
@@ -181,17 +177,19 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       selectedLineSymbol = null;
     }
 
-    LatLng start = geofencePolygon[lineIndex];
-    LatLng end = geofencePolygon[(lineIndex + 1) % geofencePolygon.length];
-    LatLng midpoint = LatLng(
-      (start.latitude + end.latitude) / 2,
-      (start.longitude + end.longitude) / 2,
+    LatLng startPoint = geofencePolygon[lineIndex];
+    LatLng endPoint = geofencePolygon[(lineIndex + 1) % geofencePolygon.length];
+    LatLng midPoint = LatLng(
+      (startPoint.latitude + endPoint.latitude) / 2,
+      (startPoint.longitude + endPoint.longitude) / 2,
     );
+    geofencePolygon.add(midPoint);
+    // updateMarkers();
 
     selectedLineSymbol = await mapController!.addSymbol(
       SymbolOptions(
-        geometry: midpoint,
-        iconImage: 'custom-marker',
+        geometry: midPoint,
+        iconImage: 'user-marker',
         iconSize: 1.5,
         draggable: true,
       ),
@@ -199,46 +197,40 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     selectedLineIndex = lineIndex;
 
     // Add drag listener to the new symbol
-    mapController?.onFeatureDrag.add(_onMidpointDrag);
+    mapController?.onFeatureDrag.add(_onMidPointSymbolDrag);
   }
 
-  void _onSymbolTapped(Symbol symbol) {
-    if (symbol == selectedLineSymbol) {
-      mapController?.onFeatureDrag.add(_onMidpointDrag);
-    }
-  }
-
-  void _onMidpointDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
+  void _onMidPointSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     if (id == selectedLineSymbol?.id && selectedLineIndex != null) {
-      if (eventType == DragEventType.drag) {
+      if (eventType == DragEventType.start) {
         setState(() {
           // While dragging, show the user the new potential vertex position
           geofencePolygon[selectedLineIndex! + 1] = current;
-          updatePolygon();
-          updateMarkers();
+          updatePolygonFill();
+          // updateMarkers();
         });
       } else if (eventType == DragEventType.end) {
         setState(() {
           // Insert the new point into the geofencePolygon
           geofencePolygon.insert(selectedLineIndex! + 1, current);
 
-          // Remove the midpoint symbol and reset selection
+          // Remove the midPoint symbol and reset selection
           mapController?.removeSymbol(selectedLineSymbol!);
           selectedLineSymbol = null;
           selectedLineIndex = null;
 
           // Re-update everything to reflect the new polygon state
-          updatePolygon();
+          updatePolygonFill();
           updateMarkers();
 
-          // Remove drag listener for midpoint
-          mapController?.onFeatureDrag.remove(_onMidpointDrag);
+          // Remove drag listener for midPoint
+          mapController?.onFeatureDrag.remove(_onMidPointSymbolDrag);
         });
       }
     }
   }
 
-  void _onFeatureDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
+  void _onVertexSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     int index = markers.indexWhere((marker) => marker.id == id);
 
     if (index != -1) {
@@ -250,13 +242,9 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
           geofencePolygon[geofencePolygon.length - 1] = current;
         }
 
-        updatePolygon();
+        updatePolygonFill();
       });
     }
-  }
-
-  void addDragListener() {
-    mapController?.onFeatureDrag.add(_onFeatureDrag);
   }
 
   @override
