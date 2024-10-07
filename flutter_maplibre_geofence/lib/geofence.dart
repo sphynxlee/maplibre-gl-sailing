@@ -183,8 +183,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       (startPoint.latitude + endPoint.latitude) / 2,
       (startPoint.longitude + endPoint.longitude) / 2,
     );
-    geofencePolygon.add(midPoint);
-    // updateMarkers();
 
     selectedLineSymbol = await mapController!.addSymbol(
       SymbolOptions(
@@ -203,12 +201,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   void _onMidPointSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     if (id == selectedLineSymbol?.id && selectedLineIndex != null) {
       if (eventType == DragEventType.start) {
-        setState(() {
-          // While dragging, show the user the new potential vertex position
-          geofencePolygon[selectedLineIndex! + 1] = current;
-          updatePolygonFill();
-          // updateMarkers();
-        });
+        // setState(() {
+        //   // While dragging, show the user the new potential vertex position
+        //   geofencePolygon[selectedLineIndex! + 1] = current;
+        //   updatePolygonFill();
+        //   // updateMarkers();
+        // });
       } else if (eventType == DragEventType.end) {
         setState(() {
           // Insert the new point into the geofencePolygon
@@ -220,8 +218,8 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
           selectedLineIndex = null;
 
           // Re-update everything to reflect the new polygon state
-          updatePolygonFill();
           updateMarkers();
+          updatePolygonFill();
 
           // Remove drag listener for midPoint
           mapController?.onFeatureDrag.remove(_onMidPointSymbolDrag);
