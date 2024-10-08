@@ -67,23 +67,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     updatePolygonFills();
   }
 
-  Future<void> _onStyleLoadedCallback() async {
-    try {
-      await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
-      await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
-      print('Custom marker image loaded successfully.');
-    } catch (e) {
-      print('Error loading custom marker image: $e');
-    }
-    print('Map style has been loaded.');
-  }
-
-  Future<void> addImageFromAsset(String name, String assetName) async {
-    final bytes = await rootBundle.load(assetName);
-    final list = bytes.buffer.asUint8List();
-    return mapController!.addImage(name, list);
-  }
-
   Future<void> updateMarkers() async {
     try {
       // Remove existing markers
@@ -313,6 +296,23 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         break;
       }
     }
+  }
+
+  Future<void> _onStyleLoadedCallback() async {
+    try {
+      await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+      await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
+      print('Custom marker image loaded successfully.');
+    } catch (e) {
+      print('Error loading custom marker image: $e');
+    }
+    print('Map style has been loaded.');
+  }
+
+  Future<void> addImageFromAsset(String name, String assetName) async {
+    final bytes = await rootBundle.load(assetName);
+    final list = bytes.buffer.asUint8List();
+    return mapController!.addImage(name, list);
   }
 
   @override
