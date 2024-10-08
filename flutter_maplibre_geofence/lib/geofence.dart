@@ -34,6 +34,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       mapController = controller;
     });
 
+    mapController!.setSymbolIconAllowOverlap(true);
+
+    mapController?.onFeatureDrag.add(_onVertexSymbolDrag);
+    mapController?.onFeatureDrag.add(_onMidPointSymbolDrag);
+    mapController?.onLineTapped.add(_onLineTapped);
+
     // Initialize the geofence polygon
     List<LatLng> initialPolygon = [
       const LatLng(37.7749, -122.4194), // Point A
@@ -43,7 +49,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     ];
 
     setGeofencePolygon(initialPolygon);
-    mapController?.onFeatureDrag.add(_onVertexSymbolDrag);
   }
 
   void setGeofencePolygon(List<LatLng> coordinates) {
@@ -98,7 +103,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
             draggable: true,
           ),
         );
-        mapController!.setSymbolIconAllowOverlap(true);
         markers.add(marker);
       }
       print('Markers updated successfully.');
@@ -107,13 +111,14 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     }
   }
 
-  Future<void> updatePolygonFill() async {
+  Future<void> updatePolygonFill({List<LatLng>? coordinates}) async {
     try {
+      List<LatLng> coords = coordinates ?? geofencePolygon;
       if (polygonFill != null) {
         await mapController?.updateFill(
             polygonFill!,
             FillOptions(
-              geometry: [geofencePolygon],
+              geometry: [coords],
               fillColor: "#FF0000",
               fillOpacity: 0.5,
               fillOutlineColor: "#000000",
@@ -121,21 +126,22 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       } else {
         polygonFill = await mapController?.addFill(
           FillOptions(
-            geometry: [geofencePolygon],
+            geometry: [coords],
             fillColor: "#FF0000",
             fillOpacity: 0.5,
             fillOutlineColor: "#000000",
           ),
         );
       }
-      await updateLines();
+      await updateLines(coordinates: coords);
     } catch (e) {
       print('Error updating polygon: $e');
     }
   }
 
-  Future<void> updateLines() async {
+  Future<void> updateLines({List<LatLng>? coordinates}) async {
     try {
+      List<LatLng> coords = coordinates ?? geofencePolygon;
       // Remove existing lines
       for (Line line in lines) {
         await mapController?.removeLine(line);
@@ -143,10 +149,10 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       lines.clear();
 
       // Add new lines for each edge of the polygon
-      for (int i = 0; i < geofencePolygon.length - 1; i++) {
+      for (int i = 0; i < coords.length - 1; i++) {
         Line line = await mapController!.addLine(
           LineOptions(
-            geometry: [geofencePolygon[i], geofencePolygon[i + 1]],
+            geometry: [coords[i], coords[i + 1]],
             lineColor: "#0000FF", // Blue color for the lines
             lineWidth: 3,
             lineOpacity: 0.7,
@@ -155,9 +161,6 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
         );
         lines.add(line);
       }
-
-      // Add tap listener to lines
-      mapController?.onLineTapped.add(_onLineTapped);
     } catch (e) {
       print('Error updating lines: $e');
     }
@@ -193,20 +196,17 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       ),
     );
     selectedLineIndex = lineIndex;
-
-    // Add drag listener to the new symbol
-    mapController?.onFeatureDrag.add(_onMidPointSymbolDrag);
   }
 
   void _onMidPointSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     if (id == selectedLineSymbol?.id && selectedLineIndex != null) {
-      if (eventType == DragEventType.start) {
-        // setState(() {
-        //   // While dragging, show the user the new potential vertex position
-        //   geofencePolygon[selectedLineIndex! + 1] = current;
-        //   updatePolygonFill();
-        //   // updateMarkers();
-        // });
+      if (eventType == DragEventType.drag) {
+        setState(() {
+          // Create a temporary copy of the polygon with the new point inserted
+          List<LatLng> tempPolygon = List.from(geofencePolygon);
+          tempPolygon.insert(selectedLineIndex! + 1, current);
+          updatePolygonFillWithCoordinates(tempPolygon);
+        });
       } else if (eventType == DragEventType.end) {
         setState(() {
           // Insert the new point into the geofencePolygon
@@ -220,11 +220,61 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
           // Re-update everything to reflect the new polygon state
           updateMarkers();
           updatePolygonFill();
-
-          // Remove drag listener for midPoint
-          mapController?.onFeatureDrag.remove(_onMidPointSymbolDrag);
         });
       }
+    }
+  }
+
+  Future<void> updatePolygonFillWithCoordinates(List<LatLng> coordinates) async {
+    try {
+      if (polygonFill != null) {
+        await mapController?.updateFill(
+            polygonFill!,
+            FillOptions(
+              geometry: [coordinates],
+              fillColor: "#FF0000",
+              fillOpacity: 0.5,
+              fillOutlineColor: "#000000",
+            ));
+      } else {
+        polygonFill = await mapController?.addFill(
+          FillOptions(
+            geometry: [coordinates],
+            fillColor: "#FF0000",
+            fillOpacity: 0.5,
+            fillOutlineColor: "#000000",
+          ),
+        );
+      }
+      await updateLinesWithCoordinates(coordinates);
+    } catch (e) {
+      print('Error updating polygon: $e');
+    }
+  }
+
+  Future<void> updateLinesWithCoordinates(List<LatLng> coordinates) async {
+    try {
+      // Remove existing lines
+      for (Line line in lines) {
+        await mapController?.removeLine(line);
+      }
+      lines.clear();
+
+      // Add new lines for each edge of the polygon
+      for (int i = 0; i < coordinates.length - 1; i++) {
+        Line line = await mapController!.addLine(
+          LineOptions(
+            geometry: [coordinates[i], coordinates[i + 1]],
+            lineColor: "#0000FF", // Blue color for the lines
+            lineWidth: 3,
+            lineOpacity: 0.7,
+            draggable: false, // Lines are not draggable
+          ),
+        );
+        lines.add(line);
+      }
+    } catch (e) {
+      print('Error updating lines: $e');
     }
   }
 
