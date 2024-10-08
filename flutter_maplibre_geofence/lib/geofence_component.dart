@@ -3,14 +3,18 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
 
-class GeofenceHomePage extends StatefulWidget {
-  const GeofenceHomePage({super.key});
+class GeofenceComponent extends StatefulWidget {
+  final List<LatLng> initialPolygon;
+  const GeofenceComponent({
+    super.key,
+    required this.initialPolygon,
+    });
 
   @override
-  GeofenceHomePageState createState() => GeofenceHomePageState();
+  GeofenceComponentState createState() => GeofenceComponentState();
 }
 
-class GeofenceHomePageState extends State<GeofenceHomePage> {
+class GeofenceComponentState extends State<GeofenceComponent> {
   MapLibreMapController? mapController;
 
   List<LatLng> geofencePolygon = [];
@@ -40,15 +44,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     mapController?.onFeatureDrag.add(_onMidPointSymbolDrag);
     mapController?.onLineTapped.add(_onLineTapped);
 
-    // Initialize the geofence polygon
-    List<LatLng> initialPolygon = [
-      const LatLng(37.7749, -122.4194), // Point A
-      const LatLng(37.7799, -122.4194), // Point B
-      const LatLng(37.7799, -122.4144), // Point C
-      const LatLng(37.7749, -122.4144), // Point D
-    ];
-
-    setGeofencePolygon(initialPolygon);
+    setGeofencePolygon(widget.initialPolygon);
   }
 
   void setGeofencePolygon(List<LatLng> coordinates) {
