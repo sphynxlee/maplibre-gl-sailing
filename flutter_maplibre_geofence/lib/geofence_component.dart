@@ -206,18 +206,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   void _onMidPointSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     if (id == selectedLineSymbol?.id && selectedPolygonIndex != null && selectedLineIndex != null) {
-      // if (eventType == DragEventType.drag) {
-      //   setState(() {
-      //     // Create a temporary copy of the polygon with the new point inserted
-      //     List<LatLng> tempPolygon = List.from(geofencePolygons[selectedPolygonIndex!]);
-      //     tempPolygon.insert(selectedLineIndex! + 1, current);
-      //     // Ensure the polygon is closed
-      //     if (tempPolygon.first != tempPolygon.last) {
-      //       tempPolygon.add(tempPolygon.first);
-      //     }
-      //     updatePolygonFillWithCoordinates(selectedPolygonIndex!, tempPolygon);
-      //   });
-      // } else if (eventType == DragEventType.end) {
         setState(() {
           // Insert the new point into the geofencePolygon
           geofencePolygons[selectedPolygonIndex!].insert(selectedLineIndex! + 1, current);
@@ -233,52 +221,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       // }
     }
   }
-
-  // Future<void> updatePolygonFillWithCoordinates(int polyIndex, List<LatLng> coordinates) async {
-  //   try {
-  //     if (polygonFills[polyIndex] != null) {
-  //       await mapController?.updateFill(
-  //           polygonFills[polyIndex]!,
-  //           FillOptions(
-  //             geometry: [coordinates],
-  //             fillColor: "#FF0000",
-  //             fillOpacity: 0.5,
-  //             fillOutlineColor: "#000000",
-  //           ));
-  //     }
-  //     await updateLinesWithCoordinates(polyIndex, coordinates);
-  //   } catch (e) {
-  //     print('Error updating polygon: $e');
-  //   }
-  // }
-
-  // Future<void> updateLinesWithCoordinates(int polyIndex, List<LatLng> coordinates) async {
-  //   try {
-  //     // Remove existing lines for this polygon
-  //     for (Line line in lines[polyIndex]) {
-  //       await mapController?.removeLine(line);
-  //     }
-  //     lines[polyIndex].clear();
-
-  //     // Add new lines for each edge of the polygon
-  //     List<Line> lineList = [];
-  //     for (int i = 0; i < coordinates.length - 1; i++) {
-  //       Line line = await mapController!.addLine(
-  //         LineOptions(
-  //           geometry: [coordinates[i], coordinates[i + 1]],
-  //           lineColor: "#0000FF", // Blue color for the lines
-  //           lineWidth: 3,
-  //           lineOpacity: 0.7,
-  //           draggable: false,
-  //         ),
-  //       );
-  //       lineList.add(line);
-  //     }
-  //     lines[polyIndex] = lineList;
-  //   } catch (e) {
-  //     print('Error updating lines: $e');
-  //   }
-  // }
 
   void _onVertexSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     for (int polyIndex = 0; polyIndex < markers.length; polyIndex++) {
