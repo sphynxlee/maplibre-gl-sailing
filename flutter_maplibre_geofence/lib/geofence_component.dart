@@ -94,7 +94,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               draggable: true,
             ),
           );
-          mapController?.setSymbolIconAllowOverlap(true);
           markerList.add(marker);
         }
         markers.add(markerList);
@@ -197,7 +196,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     selectedLineSymbol = await mapController!.addSymbol(
       SymbolOptions(
         geometry: midPoint,
-        iconImage: 'user-marker',
+        iconImage: 'custom-marker',
         iconSize: 1.5,
         draggable: true,
       ),
@@ -247,8 +246,10 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   Future<void> _onStyleLoadedCallback() async {
     try {
       await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
-      await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
+      // await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
+
       MapLogger.log('Custom marker image loaded successfully.');
+
       setGeofencePolygons(widget.initialPolygons);
     } catch (e) {
       MapLogger.error('Error loading custom marker image: $e');
