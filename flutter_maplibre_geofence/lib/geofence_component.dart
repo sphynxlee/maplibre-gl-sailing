@@ -204,6 +204,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         draggable: true,
       ),
     );
+    MapLogger.log('Midpoint symbol added successfully. ID: ${selectedLineSymbol?.id}');
     mapController?.setSymbolIconAllowOverlap(true);
     selectedLineIndex = lineIndex;
   }
