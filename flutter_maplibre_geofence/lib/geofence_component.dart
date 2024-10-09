@@ -69,35 +69,62 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> updateMarkers() async {
     try {
-      // Remove existing markers
-      for (var markerList in markers) {
-        for (Symbol marker in markerList) {
-          await mapController?.removeSymbol(marker);
-        }
-      }
-      markers.clear();
-
-      // Add new markers for each polygon
       for (int polyIndex = 0; polyIndex < geofencePolygons.length; polyIndex++) {
         List<LatLng> polygon = geofencePolygons[polyIndex];
-        List<Symbol> markerList = [];
 
-        for (int i = 0; i < polygon.length - 1; i++) {
-          Symbol marker = await mapController!.addSymbol(
-            SymbolOptions(
-              geometry: polygon[i],
-              iconImage: 'custom-marker',
-              iconSize: 2.0,
-              textField: '$polyIndex-$i',
-              textSize: 20,
-              textColor: '#000000',
-              draggable: true,
-            ),
-          );
-          markerList.add(marker);
+        // Ensure markers list is initialized for this polygon
+        if (markers.length <= polyIndex) {
+          markers.add([]);
         }
-        markers.add(markerList);
+
+        // Update or add markers for each vertex
+        for (int i = 0; i < polygon.length - 1; i++) {
+          if (i < markers[polyIndex].length) {
+            // Update existing marker
+            await mapController?.updateSymbol(
+              markers[polyIndex][i],
+              SymbolOptions(
+                geometry: polygon[i],
+                iconImage: 'custom-marker',
+                iconSize: 2.0,
+                textField: '$polyIndex-$i',
+                textSize: 20,
+                textColor: '#000000',
+                draggable: true,
+              ),
+            );
+          } else {
+            // Add new marker
+            Symbol marker = await mapController!.addSymbol(
+              SymbolOptions(
+                geometry: polygon[i],
+                iconImage: 'custom-marker',
+                iconSize: 2.0,
+                textField: '$polyIndex-$i',
+                textSize: 20,
+                textColor: '#000000',
+                draggable: true,
+              ),
+            );
+            markers[polyIndex].add(marker);
+          }
+        }
+
+        // Remove excess markers if polygon has fewer points now
+        while (markers[polyIndex].length > polygon.length - 1) {
+          await mapController?.removeSymbol(markers[polyIndex].last);
+          markers[polyIndex].removeLast();
+        }
       }
+
+      // Remove markers for deleted polygons
+      while (markers.length > geofencePolygons.length) {
+        for (Symbol marker in markers.last) {
+          await mapController?.removeSymbol(marker);
+        }
+        markers.removeLast();
+      }
+
       MapLogger.log('Markers updated successfully.');
     } catch (e) {
       MapLogger.error('Error updating markers: $e');
@@ -106,26 +133,38 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> updatePolygonFills() async {
     try {
-      // Remove existing fills
-      for (Fill? fill in polygonFills) {
-        if (fill != null) {
-          await mapController?.removeFill(fill);
+      for (int i = 0; i < geofencePolygons.length; i++) {
+        if (i < polygonFills.length) {
+          // Update existing fill
+          await mapController?.updateFill(
+            polygonFills[i]!,
+            FillOptions(
+              geometry: [geofencePolygons[i]],
+              fillColor: "#FF0000",
+              fillOpacity: 0.5,
+              fillOutlineColor: "#000000",
+            ),
+          );
+        } else {
+          // Add new fill
+          Fill? fill = await mapController?.addFill(
+            FillOptions(
+              geometry: [geofencePolygons[i]],
+              fillColor: "#FF0000",
+              fillOpacity: 0.5,
+              fillOutlineColor: "#000000",
+            ),
+          );
+          polygonFills.add(fill);
         }
       }
-      polygonFills.clear();
 
-      // Add new fills for each polygon
-      for (List<LatLng> polygon in geofencePolygons) {
-        Fill? fill = await mapController?.addFill(
-          FillOptions(
-            geometry: [polygon],
-            fillColor: "#FF0000",
-            fillOpacity: 0.5,
-            fillOutlineColor: "#000000",
-          ),
-        );
-        polygonFills.add(fill);
+      // Remove excess fills
+      while (polygonFills.length > geofencePolygons.length) {
+        await mapController?.removeFill(polygonFills.last!);
+        polygonFills.removeLast();
       }
+
       await updateLines();
     } catch (e) {
       MapLogger.error('Error updating polygon fills: $e');
@@ -134,32 +173,55 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> updateLines() async {
     try {
-      // Remove existing lines
-      for (var lineList in lines) {
-        for (Line line in lineList) {
-          await mapController?.removeLine(line);
-        }
-      }
-      lines.clear();
-
-      // Add new lines for each polygon
       for (int polyIndex = 0; polyIndex < geofencePolygons.length; polyIndex++) {
         List<LatLng> polygon = geofencePolygons[polyIndex];
-        List<Line> lineList = [];
+
+        // Ensure lines list is initialized for this polygon
+        if (lines.length <= polyIndex) {
+          lines.add([]);
+        }
 
         for (int i = 0; i < polygon.length - 1; i++) {
-          Line line = await mapController!.addLine(
-            LineOptions(
-              geometry: [polygon[i], polygon[i + 1]],
-              lineColor: "#0000FF", // Blue color for the lines
-              lineWidth: 3,
-              lineOpacity: 0.7,
-              draggable: false,
-            ),
-          );
-          lineList.add(line);
+          if (i < lines[polyIndex].length) {
+            // Update existing line
+            await mapController?.updateLine(
+              lines[polyIndex][i],
+              LineOptions(
+                geometry: [polygon[i], polygon[i + 1]],
+                lineColor: "#0000FF",
+                lineWidth: 6,
+                lineOpacity: 0.7,
+                draggable: false,
+              ),
+            );
+          } else {
+            // Add new line
+            Line line = await mapController!.addLine(
+              LineOptions(
+                geometry: [polygon[i], polygon[i + 1]],
+                lineColor: "#0000FF",
+                lineWidth: 3,
+                lineOpacity: 0.7,
+                draggable: false,
+              ),
+            );
+            lines[polyIndex].add(line);
+          }
         }
-        lines.add(lineList);
+
+        // Remove excess lines if polygon has fewer points now
+        while (lines[polyIndex].length > polygon.length - 1) {
+          await mapController?.removeLine(lines[polyIndex].last);
+          lines[polyIndex].removeLast();
+        }
+      }
+
+      // Remove lines for deleted polygons
+      while (lines.length > geofencePolygons.length) {
+        for (Line line in lines.last) {
+          await mapController?.removeLine(line);
+        }
+        lines.removeLast();
       }
     } catch (e) {
       MapLogger.error('Error updating lines: $e');
@@ -226,19 +288,27 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void _onVertexSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
-    for (int polyIndex = 0; polyIndex < markers.length; polyIndex++) {
-      int index = markers[polyIndex].indexWhere((marker) => marker.id == id);
-      if (index != -1) {
-        setState(() {
+    if (eventType == DragEventType.end) {
+      bool polygonUpdated = false;
+      for (final polyIndexEntry in markers.asMap().entries) {
+        final polyIndex = polyIndexEntry.key;
+        final markerList = polyIndexEntry.value;
+        final index = markerList.indexWhere((marker) => marker.id == id);
+        if (index != -1) {
           // Update the geofencePolygon vertex position based on drag event.
           geofencePolygons[polyIndex][index] = current;
           // If this is the first point, also update the last point to keep the polygon closed
           if (index == 0) {
             geofencePolygons[polyIndex][geofencePolygons[polyIndex].length - 1] = current;
           }
+          polygonUpdated = true;
+          break;
+        }
+      }
+      if (polygonUpdated) {
+        setState(() {
           updatePolygonFills();
         });
-        break;
       }
     }
   }
