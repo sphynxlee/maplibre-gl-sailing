@@ -41,13 +41,11 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       mapController = controller;
     });
 
-    // mapController!.setSymbolIconAllowOverlap(true);
+    mapController!.setSymbolIconAllowOverlap(true);
 
     mapController?.onFeatureDrag.add(_onVertexSymbolDrag);
     mapController?.onFeatureDrag.add(_onMidPointSymbolDrag);
     mapController?.onLineTapped.add(_onLineTapped);
-
-    setGeofencePolygons(widget.initialPolygons);
   }
 
   void setGeofencePolygons(List<List<LatLng>> polygons) {
@@ -251,6 +249,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
       await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
       MapLogger.log('Custom marker image loaded successfully.');
+      setGeofencePolygons(widget.initialPolygons);
     } catch (e) {
       MapLogger.error('Error loading custom marker image: $e');
     }
