@@ -189,7 +189,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               LineOptions(
                 geometry: [polygon[i], polygon[i + 1]],
                 lineColor: "#0000FF",
-                lineWidth: 6,
+                lineWidth: 5,
                 lineOpacity: 0.7,
                 draggable: false,
               ),
@@ -200,7 +200,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               LineOptions(
                 geometry: [polygon[i], polygon[i + 1]],
                 lineColor: "#0000FF",
-                lineWidth: 3,
+                lineWidth: 5,
                 lineOpacity: 0.7,
                 draggable: false,
               ),
