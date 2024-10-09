@@ -86,7 +86,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               SymbolOptions(
                 geometry: polygon[i],
                 iconImage: 'custom-marker',
-                iconSize: 2.0,
+                iconSize: 1.0,
                 textField: '$polyIndex-$i',
                 textSize: 20,
                 textColor: '#000000',
@@ -99,7 +99,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               SymbolOptions(
                 geometry: polygon[i],
                 iconImage: 'custom-marker',
-                iconSize: 2.0,
+                iconSize: 1.0,
                 textField: '$polyIndex-$i',
                 textSize: 20,
                 textColor: '#000000',
@@ -259,7 +259,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       SymbolOptions(
         geometry: midPoint,
         iconImage: 'custom-marker',
-        iconSize: 1.5,
+        iconSize: 1.0,
         draggable: true,
       ),
     );
