@@ -3,6 +3,8 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
 
+import './common/service/logger.dart';
+
 class GeofenceComponent extends StatefulWidget {
   final List<List<LatLng>> initialPolygons;
   const GeofenceComponent({
@@ -99,9 +101,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         }
         markers.add(markerList);
       }
-      print('Markers updated successfully.');
+      MapLogger.log('Markers updated successfully.');
     } catch (e) {
-      print('Error updating markers: $e');
+      MapLogger.error('Error updating markers: $e');
     }
   }
 
@@ -129,7 +131,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       }
       await updateLines();
     } catch (e) {
-      print('Error updating polygon fills: $e');
+      MapLogger.error('Error updating polygon fills: $e');
     }
   }
 
@@ -163,7 +165,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         lines.add(lineList);
       }
     } catch (e) {
-      print('Error updating lines: $e');
+      MapLogger.error('Error updating lines: $e');
     }
   }
 
@@ -246,11 +248,11 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     try {
       await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
       await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
-      print('Custom marker image loaded successfully.');
+      MapLogger.log('Custom marker image loaded successfully.');
     } catch (e) {
-      print('Error loading custom marker image: $e');
+      MapLogger.error('Error loading custom marker image: $e');
     }
-    print('Map style has been loaded.');
+    MapLogger.log('Map style has been loaded.');
   }
 
   Future<void> addImageFromAsset(String name, String assetName) async {
