@@ -9,22 +9,7 @@ void main() {
   // if (kIsWeb) {
   //   initializeForWeb();
   // }
-  runApp(const MaterialApp(home: MyApp()));
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Geofence Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const GeofenceHomePage(),
-    );
-  }
+  runApp(const MaterialApp(home: GeofenceHomePage()));
 }
 
 class GeofenceHomePage extends StatefulWidget {
