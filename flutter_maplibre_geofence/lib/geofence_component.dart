@@ -211,19 +211,20 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   void _onMidPointSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
     if (id == selectedLineSymbol?.id && selectedPolygonIndex != null && selectedLineIndex != null) {
-      setState(() {
-        // Insert the new point into the geofencePolygon
-        geofencePolygons[selectedPolygonIndex!].insert(selectedLineIndex! + 1, current);
-        // Remove the midPoint symbol and reset selection
-        mapController?.removeSymbol(selectedLineSymbol!);
-        selectedLineSymbol = null;
-        selectedLineIndex = null;
-        selectedPolygonIndex = null;
-        // Re-update everything to reflect the new polygon state
-        updateMarkers();
-        updatePolygonFills();
-      });
-      // }
+      if (eventType == DragEventType.end) {
+        setState(() {
+          // Insert the new point into the geofencePolygon
+          geofencePolygons[selectedPolygonIndex!].insert(selectedLineIndex! + 1, current);
+          // Remove the midPoint symbol and reset selection
+          mapController?.removeSymbol(selectedLineSymbol!);
+          selectedLineSymbol = null;
+          selectedLineIndex = null;
+          selectedPolygonIndex = null;
+          // Re-update everything to reflect the new polygon state
+          updateMarkers();
+          updatePolygonFills();
+        });
+      }
     }
   }
 
