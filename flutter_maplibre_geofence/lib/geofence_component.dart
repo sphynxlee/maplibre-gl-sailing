@@ -28,6 +28,15 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   int? selectedPolygonIndex;
   int? selectedLineIndex;
 
+  bool isDrawingPolygon = false;
+  List<LatLng> currentPolygon = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // ... existing initState code ...
+  }
+
   @override
   void dispose() {
     mapController?.onFeatureDrag.remove(_onVertexSymbolDrag);
@@ -46,6 +55,60 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     mapController?.onFeatureDrag.add(_onVertexSymbolDrag);
     mapController?.onFeatureDrag.add(_onMidPointSymbolDrag);
     mapController?.onLineTapped.add(_onLineTapped);
+  }
+
+  void _handleMapClick(Point<double> point, LatLng coordinates) {
+    MapLogger.log('Map clicked at: $point');
+    if (isDrawingPolygon) {
+      setState(() {
+        currentPolygon.add(coordinates);
+      });
+      _updateCurrentPolygon();
+    }
+  }
+
+  void _startDrawingPolygon() {
+    setState(() {
+      isDrawingPolygon = true;
+      currentPolygon = [];
+    });
+  }
+
+  void _finishDrawingPolygon() {
+    if (currentPolygon.length >= 3) {
+      setState(() {
+        geofencePolygons.add(List.from(currentPolygon)..add(currentPolygon.first));
+        isDrawingPolygon = false;
+        currentPolygon = [];
+      });
+      updatePolygonFills();
+    } else {
+      // Show an error message if the polygon has less than 3 vertices
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A polygon must have at least 3 vertices.')),
+      );
+    }
+  }
+
+  Future<void> _updateCurrentPolygon() async {
+    if (currentPolygon.isEmpty) return;
+
+    // Remove previous temporary polygon
+    if (polygonFills.isNotEmpty && polygonFills.last != null) {
+      await mapController?.removeFill(polygonFills.last!);
+      polygonFills.removeLast();
+    }
+
+    // Add new temporary polygon
+    Fill? fill = await mapController?.addFill(
+      FillOptions(
+        geometry: [currentPolygon],
+        fillColor: "#FF0000",
+        fillOpacity: 0.5,
+        fillOutlineColor: "#000000",
+      ),
+    );
+    polygonFills.add(fill);
   }
 
   void setGeofencePolygons(List<List<LatLng>> polygons) {
@@ -339,26 +402,38 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
-        child: MapLibreMap(
-          annotationOrder: const [
-            AnnotationType.fill,
-            AnnotationType.line,
-            AnnotationType.circle,
-            AnnotationType.symbol,
-          ],
-          onMapCreated: _onMapCreated,
-          onStyleLoadedCallback: _onStyleLoadedCallback,
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(37.7749, -122.4194), // San Francisco
-            zoom: 14.0,
+        child: GestureDetector(
+          onDoubleTap: isDrawingPolygon ? _finishDrawingPolygon : null,
+          child: MapLibreMap(
+            annotationOrder: const [
+              AnnotationType.fill,
+              AnnotationType.line,
+              AnnotationType.circle,
+              AnnotationType.symbol,
+            ],
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            onMapClick: _handleMapClick,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(37.7749, -122.4194), // San Francisco
+              zoom: 14.0,
+            ),
+            // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
+            compassViewPosition: CompassViewPosition.topRight,
+            compassEnabled: true,
           ),
-          // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
-          compassViewPosition: CompassViewPosition.topRight,
-          compassEnabled: true,
         ),
       ),
-      floatingActionButton: ZoomControls(
-        mapController: mapController,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          ZoomControls(mapController: mapController),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: isDrawingPolygon ? _finishDrawingPolygon : _startDrawingPolygon,
+            child: Icon(isDrawingPolygon ? Icons.check : Icons.add),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
