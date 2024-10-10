@@ -19,22 +19,21 @@ class GeofenceComponent extends StatefulWidget {
 class GeofenceComponentState extends State<GeofenceComponent> {
   MapLibreMapController? mapController;
 
-  List<List<LatLng>> geofencePolygons = [];
+  List<List<LatLng>> geofenceArrays = [];
   List<List<Symbol>> markers = [];
   List<List<Line>> lines = [];
   List<Fill?> polygonFills = [];
+  List<LatLng> currentGeofence = [];
 
   Symbol? selectedLineSymbol;
   int? selectedPolygonIndex;
   int? selectedLineIndex;
 
   bool isDrawingPolygon = false;
-  List<LatLng> currentPolygon = [];
 
   @override
   void initState() {
     super.initState();
-    // ... existing initState code ...
   }
 
   @override
@@ -61,7 +60,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     MapLogger.log('Map clicked at point: $point, coordinates: $coordinates');
     if (isDrawingPolygon) {
       setState(() {
-        currentPolygon.add(coordinates);
+        currentGeofence.add(coordinates);
       });
       _updateCurrentPolygon();
     }
@@ -70,16 +69,16 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   void _startDrawingPolygon() {
     setState(() {
       isDrawingPolygon = true;
-      currentPolygon = [];
+      currentGeofence = [];
     });
   }
 
   void _finishDrawingPolygon() {
-    if (currentPolygon.length >= 3) {
+    if (currentGeofence.length >= 3) {
       setState(() {
-        geofencePolygons.add(List.from(currentPolygon)..add(currentPolygon.first));
+        geofenceArrays.add(List.from(currentGeofence)..add(currentGeofence.first));
         isDrawingPolygon = false;
-        currentPolygon = [];
+        currentGeofence = [];
       });
       updatePolygonFills();
     } else {
@@ -91,7 +90,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   Future<void> _updateCurrentPolygon() async {
-    if (currentPolygon.isEmpty) return;
+    if (currentGeofence.isEmpty) return;
 
     // Remove previous temporary polygon
     if (polygonFills.isNotEmpty && polygonFills.last != null) {
@@ -99,10 +98,20 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       polygonFills.removeLast();
     }
 
+// Add marker for each point
+    for (var point in currentGeofence) {
+      await mapController?.addSymbol(
+        SymbolOptions(
+          geometry: point,
+          iconImage: 'custom-marker',
+          iconSize: 1.0,
+        ),
+      );
+    }
     // Add new temporary polygon
     Fill? fill = await mapController?.addFill(
       FillOptions(
-        geometry: [currentPolygon],
+        geometry: [currentGeofence],
         fillColor: "#FF0000",
         fillOpacity: 0.5,
         fillOutlineColor: "#000000",
@@ -113,7 +122,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   void setGeofencePolygons(List<List<LatLng>> polygons) {
     setState(() {
-      geofencePolygons = [];
+      geofenceArrays = [];
 
       for (var coords in polygons) {
         // Ensure the polygon is closed
@@ -121,7 +130,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         if (polygon.isNotEmpty && polygon.first != polygon.last) {
           polygon.add(polygon.first);
         }
-        geofencePolygons.add(polygon);
+        geofenceArrays.add(polygon);
       }
     });
 
@@ -132,8 +141,8 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> updateMarkers() async {
     try {
-      for (int polyIndex = 0; polyIndex < geofencePolygons.length; polyIndex++) {
-        List<LatLng> polygon = geofencePolygons[polyIndex];
+      for (int polyIndex = 0; polyIndex < geofenceArrays.length; polyIndex++) {
+        List<LatLng> polygon = geofenceArrays[polyIndex];
 
         // Ensure markers list is initialized for this polygon
         if (markers.length <= polyIndex) {
@@ -181,7 +190,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       }
 
       // Remove markers for deleted polygons
-      while (markers.length > geofencePolygons.length) {
+      while (markers.length > geofenceArrays.length) {
         for (Symbol marker in markers.last) {
           await mapController?.removeSymbol(marker);
         }
@@ -196,13 +205,13 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> updatePolygonFills() async {
     try {
-      for (int i = 0; i < geofencePolygons.length; i++) {
+      for (int i = 0; i < geofenceArrays.length; i++) {
         if (i < polygonFills.length) {
           // Update existing fill
           await mapController?.updateFill(
             polygonFills[i]!,
             FillOptions(
-              geometry: [geofencePolygons[i]],
+              geometry: [geofenceArrays[i]],
               fillColor: "#FF0000",
               fillOpacity: 0.5,
               fillOutlineColor: "#000000",
@@ -212,7 +221,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
           // Add new fill
           Fill? fill = await mapController?.addFill(
             FillOptions(
-              geometry: [geofencePolygons[i]],
+              geometry: [geofenceArrays[i]],
               fillColor: "#FF0000",
               fillOpacity: 0.5,
               fillOutlineColor: "#000000",
@@ -223,7 +232,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       }
 
       // Remove excess fills
-      while (polygonFills.length > geofencePolygons.length) {
+      while (polygonFills.length > geofenceArrays.length) {
         await mapController?.removeFill(polygonFills.last!);
         polygonFills.removeLast();
       }
@@ -236,8 +245,8 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> updateLines() async {
     try {
-      for (int polyIndex = 0; polyIndex < geofencePolygons.length; polyIndex++) {
-        List<LatLng> polygon = geofencePolygons[polyIndex];
+      for (int polyIndex = 0; polyIndex < geofenceArrays.length; polyIndex++) {
+        List<LatLng> polygon = geofenceArrays[polyIndex];
 
         // Ensure lines list is initialized for this polygon
         if (lines.length <= polyIndex) {
@@ -280,7 +289,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       }
 
       // Remove lines for deleted polygons
-      while (lines.length > geofencePolygons.length) {
+      while (lines.length > geofenceArrays.length) {
         for (Line line in lines.last) {
           await mapController?.removeLine(line);
         }
@@ -309,7 +318,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       selectedLineSymbol = null;
     }
 
-    List<LatLng> polygon = geofencePolygons[polyIndex];
+    List<LatLng> polygon = geofenceArrays[polyIndex];
 
     LatLng startPoint = polygon[lineIndex];
     LatLng endPoint = polygon[(lineIndex + 1) % polygon.length];
@@ -336,7 +345,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       if (eventType == DragEventType.end) {
         setState(() {
           // Insert the new point into the geofencePolygon
-          geofencePolygons[selectedPolygonIndex!].insert(selectedLineIndex! + 1, current);
+          geofenceArrays[selectedPolygonIndex!].insert(selectedLineIndex! + 1, current);
           // Remove the midPoint symbol and reset selection
           mapController?.removeSymbol(selectedLineSymbol!);
           selectedLineSymbol = null;
@@ -359,10 +368,10 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         final index = markerList.indexWhere((marker) => marker.id == id);
         if (index != -1) {
           // Update the geofencePolygon vertex position based on drag event.
-          geofencePolygons[polyIndex][index] = current;
+          geofenceArrays[polyIndex][index] = current;
           // If this is the first point, also update the last point to keep the polygon closed
           if (index == 0) {
-            geofencePolygons[polyIndex][geofencePolygons[polyIndex].length - 1] = current;
+            geofenceArrays[polyIndex][geofenceArrays[polyIndex].length - 1] = current;
           }
           polygonUpdated = true;
           break;
