@@ -58,7 +58,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void _handleMapClick(Point<double> point, LatLng coordinates) {
-    MapLogger.log('Map clicked at: $point');
+    MapLogger.log('Map clicked at point: $point, coordinates: $coordinates');
     if (isDrawingPolygon) {
       setState(() {
         currentPolygon.add(coordinates);
@@ -402,26 +402,23 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
-        child: GestureDetector(
-          onDoubleTap: isDrawingPolygon ? _finishDrawingPolygon : null,
-          child: MapLibreMap(
-            annotationOrder: const [
-              AnnotationType.fill,
-              AnnotationType.line,
-              AnnotationType.circle,
-              AnnotationType.symbol,
-            ],
-            onMapCreated: _onMapCreated,
-            onStyleLoadedCallback: _onStyleLoadedCallback,
-            onMapClick: _handleMapClick,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(37.7749, -122.4194), // San Francisco
-              zoom: 14.0,
-            ),
-            // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
-            compassViewPosition: CompassViewPosition.topRight,
-            compassEnabled: true,
+        child: MapLibreMap(
+          annotationOrder: const [
+            AnnotationType.fill,
+            AnnotationType.line,
+            AnnotationType.circle,
+            AnnotationType.symbol,
+          ],
+          onMapCreated: _onMapCreated,
+          onStyleLoadedCallback: _onStyleLoadedCallback,
+          onMapClick: _handleMapClick,
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(37.7749, -122.4194), // San Francisco
+            zoom: 14.0,
           ),
+          // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
+          compassViewPosition: CompassViewPosition.topRight,
+          compassEnabled: true,
         ),
       ),
       floatingActionButton: Column(
@@ -431,7 +428,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
           const SizedBox(height: 16),
           FloatingActionButton(
             onPressed: isDrawingPolygon ? _finishDrawingPolygon : _startDrawingPolygon,
-            child: Icon(isDrawingPolygon ? Icons.check : Icons.add),
+            child: Icon(isDrawingPolygon ? Icons.check : Icons.fence),
           ),
         ],
       ),
