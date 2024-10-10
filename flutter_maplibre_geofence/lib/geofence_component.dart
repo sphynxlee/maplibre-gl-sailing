@@ -353,8 +353,51 @@ class GeofenceComponentState extends State<GeofenceComponent> {
             zoom: 14.0,
           ),
           // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
+          compassViewPosition: CompassViewPosition.topRight,
+          compassEnabled: true,
         ),
       ),
+      floatingActionButton: ZoomControls(
+        mapController: mapController,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+}
+
+class ZoomControls extends StatelessWidget {
+  final MapLibreMapController? mapController;
+
+  const ZoomControls({
+    Key? key,
+    required this.mapController,
+  }) : super(key: key);
+
+  void _zoomIn() {
+    mapController?.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  void _zoomOut() {
+    mapController?.animateCamera(CameraUpdate.zoomOut());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          heroTag: 'zoom-in',
+          onPressed: _zoomIn,
+          child: const Icon(Icons.add),
+        ),
+        const SizedBox(height: 16),
+        FloatingActionButton(
+          heroTag: 'zoom-out',
+          onPressed: _zoomOut,
+          child: const Icon(Icons.remove),
+        ),
+      ],
     );
   }
 }
