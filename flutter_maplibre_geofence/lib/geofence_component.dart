@@ -369,9 +369,9 @@ class ZoomControls extends StatelessWidget {
   final MapLibreMapController? mapController;
 
   const ZoomControls({
-    Key? key,
+    super.key,
     required this.mapController,
-  }) : super(key: key);
+  });
 
   void _zoomIn() {
     mapController?.animateCamera(CameraUpdate.zoomIn());
