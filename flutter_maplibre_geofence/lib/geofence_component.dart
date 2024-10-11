@@ -79,11 +79,15 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     if (currentGeofence.length >= 3) {
       setState(() {
         // Ensure the polygon is closed
-        geofenceArrays.add(List.from(currentGeofence)..add(currentGeofence.first));
+        List<LatLng> newPolygon = List.from(currentGeofence)..add(currentGeofence.first);
+        geofenceArrays.add(newPolygon);
         isDrawingPolygon = false;
         currentGeofence = [];
       });
+      // Update the map after adding the new polygon
+      updateMarkers();
       updatePolygonFills();
+      MapLogger.log('New polygon added. Total polygons: ${geofenceArrays.length}');
     } else {
       // Show an error message if the polygon has less than 3 vertices
       ScaffoldMessenger.of(context).showSnackBar(
@@ -210,7 +214,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         markers.removeLast();
       }
 
-      MapLogger.log('Markers updated successfully.');
+      MapLogger.log('Markers updated successfully. Total polygons: ${geofenceArrays.length}');
     } catch (e) {
       MapLogger.error('Error updating markers: $e');
     }
