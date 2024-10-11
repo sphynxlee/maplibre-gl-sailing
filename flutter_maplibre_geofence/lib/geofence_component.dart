@@ -377,29 +377,59 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void _onVertexSymbolDrag(dynamic id, {required Point<double> point, required LatLng origin, required LatLng current, required LatLng delta, required DragEventType eventType}) {
-    if (eventType == DragEventType.end) {
-      bool polygonUpdated = false;
-      for (final polyIndexEntry in markers.asMap().entries) {
-        final polyIndex = polyIndexEntry.key;
-        final markerList = polyIndexEntry.value;
-        final index = markerList.indexWhere((marker) => marker.id == id);
-        if (index != -1) {
-          // Update the geofencePolygon vertex position based on drag event.
+    for (final polyIndexEntry in markers.asMap().entries) {
+      final polyIndex = polyIndexEntry.key;
+      final markerList = polyIndexEntry.value;
+      final index = markerList.indexWhere((marker) => marker.id == id);
+      if (index != -1) {
+        // Update the geofencePolygon vertex position based on drag event.
+        setState(() {
           geofenceArrays[polyIndex][index] = current;
           // If this is the first point, also update the last point to keep the polygon closed
           if (index == 0) {
             geofenceArrays[polyIndex][geofenceArrays[polyIndex].length - 1] = current;
           }
-          polygonUpdated = true;
-          break;
-        }
-      }
-      if (polygonUpdated) {
-        setState(() {
-          updatePolygonFills();
         });
+
+        // Update the connected lines
+        _updateConnectedLines(polyIndex, index);
+
+        // If it's the end of the drag, update the entire polygon
+        if (eventType == DragEventType.end) {
+          updatePolygonFills();
+        }
+        break;
       }
     }
+  }
+
+  Future<void> _updateConnectedLines(int polyIndex, int vertexIndex) async {
+    final polygon = geofenceArrays[polyIndex];
+    final lineCount = polygon.length - 1;
+
+    // Update the line before the vertex
+    int prevLineIndex = (vertexIndex - 1 + lineCount) % lineCount;
+    await updateTempLine(polyIndex, prevLineIndex);
+
+    // Update the line after the vertex
+    int nextLineIndex = vertexIndex % lineCount;
+    await updateTempLine(polyIndex, nextLineIndex);
+  }
+
+  Future<void> updateTempLine(int polyIndex, int lineIndex) async {
+    final polygon = geofenceArrays[polyIndex];
+    final startPoint = polygon[lineIndex];
+    final endPoint = polygon[(lineIndex + 1) % polygon.length];
+
+    await mapController?.updateLine(
+      lines[polyIndex][lineIndex],
+      LineOptions(
+        geometry: [startPoint, endPoint],
+        lineColor: "#0000FF",
+        lineWidth: 5,
+        lineOpacity: 0.7,
+      ),
+    );
   }
 
   Future<void> _onStyleLoadedCallback() async {
