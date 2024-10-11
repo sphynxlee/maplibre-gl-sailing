@@ -67,6 +67,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void _startDrawingPolygon() {
+    MapLogger.log('Starting to draw polygon');
     setState(() {
       isDrawingPolygon = true;
       currentGeofence = [];
@@ -74,8 +75,10 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void _finishDrawingPolygon() {
+    MapLogger.log('Finishing to draw polygon');
     if (currentGeofence.length >= 3) {
       setState(() {
+        // Ensure the polygon is closed
         geofenceArrays.add(List.from(currentGeofence)..add(currentGeofence.first));
         isDrawingPolygon = false;
         currentGeofence = [];
@@ -93,21 +96,31 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     if (currentGeofence.isEmpty) return;
 
     // Remove previous temporary polygon
-    if (polygonFills.isNotEmpty && polygonFills.last != null) {
-      await mapController?.removeFill(polygonFills.last!);
-      polygonFills.removeLast();
-    }
+    // if (polygonFills.isNotEmpty && polygonFills.last != null) {
+    //   await mapController?.removeFill(polygonFills.last!);
+    //   polygonFills.removeLast();
+    // }
 
-// Add marker for each point
+    // Ensure markers list is initialized for this polygon
+    if (markers.length <= currentGeofence.length) {
+      markers.add([]);
+    }
+    // Add marker for each point
     for (var point in currentGeofence) {
-      await mapController?.addSymbol(
+      Symbol marker = await mapController!.addSymbol(
         SymbolOptions(
           geometry: point,
           iconImage: 'custom-marker',
           iconSize: 1.0,
+          textField: '${currentGeofence.indexOf(point)}',
+          textSize: 20,
+          textColor: '#000000',
+          draggable: true,
         ),
       );
+      markers.last.add(marker);
     }
+
     // Add new temporary polygon
     Fill? fill = await mapController?.addFill(
       FillOptions(
