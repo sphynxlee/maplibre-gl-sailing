@@ -6,10 +6,10 @@ import 'dart:math';
 import './common/service/logger.dart';
 
 class GeofenceComponent extends StatefulWidget {
-  final List<List<LatLng>> initialPolygons;
+  final Map<String, dynamic> initialGeofence;
   const GeofenceComponent({
     super.key,
-    required this.initialPolygons,
+    required this.initialGeofence,
   });
 
   @override
@@ -25,18 +25,33 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   List<Fill?> polygonFills = [];
   List<LatLng> currentGeofence = [];
 
+  String geofenceName = "";
+  String orgId = "";
+
   Symbol? selectedLineSymbol;
   int? selectedPolygonIndex;
   int? selectedLineIndex;
 
   bool isDrawingPolygon = false;
 
-  // Add this variable to store the button's position
   Rect? _buttonRect;
 
   @override
   void initState() {
     super.initState();
+    _initializeGeofence();
+  }
+
+  void _initializeGeofence() {
+    geofenceName = widget.initialGeofence['name'] as String;
+    orgId = widget.initialGeofence['orgId'] as String;
+    List<dynamic> polygons = widget.initialGeofence['polygon'] as List<dynamic>;
+
+    geofenceArrays = polygons.map((polygon) {
+      return (polygon as List<dynamic>).map((point) {
+        return LatLng(point['latitude'] as double, point['longitude'] as double);
+      }).toList();
+    }).toList();
   }
 
   @override
@@ -59,11 +74,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     mapController?.onLineTapped.add(_onLineTapped);
   }
 
-  // Modify the _handleMapClick function
   void _handleMapClick(Point<double> point, LatLng coordinates) {
     MapLogger.log('Map clicked at point: $point, coordinates: $coordinates');
     if (isDrawingPolygon) {
-      // Check if the click is not near the button
       if (_buttonRect == null || !_isClickNearButton(point)) {
         setState(() {
           currentGeofence.add(coordinates);
@@ -73,10 +86,8 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     }
   }
 
-  // Add this new method to check if the click is near the button
   bool _isClickNearButton(Point<double> point) {
     if (_buttonRect == null) return false;
-    // Define a threshold (e.g., 50 pixels) to consider "near" the button
     const threshold = 50.0;
     return point.x >= _buttonRect!.left - threshold &&
            point.x <= _buttonRect!.right + threshold &&
@@ -96,18 +107,15 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     MapLogger.log('Finishing to draw polygon');
     if (currentGeofence.length >= 3) {
       setState(() {
-        // Ensure the polygon is closed
         List<LatLng> newPolygon = List.from(currentGeofence)..add(currentGeofence.first);
         geofenceArrays.add(newPolygon);
         isDrawingPolygon = false;
         currentGeofence = [];
       });
-      // Update the map after adding the new polygon
       updateMarkers();
       updatePolygonFills();
       MapLogger.log('New polygon added. Total polygons: ${geofenceArrays.length}');
     } else {
-      // Show an error message if the polygon has less than 3 vertices
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('A polygon must have at least 3 vertices.')),
       );
@@ -117,11 +125,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   Future<void> _updateCurrentPolygon() async {
     if (currentGeofence.isEmpty) return;
 
-    // Ensure markers list is initialized for this polygon
     if (markers.length <= currentGeofence.length) {
       markers.add([]);
     }
-    // Add marker for each point
     for (var point in currentGeofence) {
       Symbol marker = await mapController!.addSymbol(
         SymbolOptions(
@@ -137,7 +143,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       markers.last.add(marker);
     }
 
-    // Add new temporary polygon
     Fill? fill = await mapController?.addFill(
       FillOptions(
         geometry: [currentGeofence],
@@ -154,7 +159,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       geofenceArrays = [];
 
       for (var coords in polygons) {
-        // Ensure the polygon is closed
         List<LatLng> polygon = List.from(coords);
         if (polygon.isNotEmpty && polygon.first != polygon.last) {
           polygon.add(polygon.first);
@@ -163,7 +167,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       }
     });
 
-    // Update the polygons on the map
     updateMarkers();
     updatePolygonFills();
   }
@@ -173,15 +176,12 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       for (int polyIndex = 0; polyIndex < geofenceArrays.length; polyIndex++) {
         List<LatLng> polygon = geofenceArrays[polyIndex];
 
-        // Ensure markers list is initialized for this polygon
         if (markers.length <= polyIndex) {
           markers.add([]);
         }
 
-        // Update or add markers for each vertex
         for (int i = 0; i < polygon.length - 1; i++) {
           if (i < markers[polyIndex].length) {
-            // Update existing marker
             await mapController?.updateSymbol(
               markers[polyIndex][i],
               SymbolOptions(
@@ -195,7 +195,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               ),
             );
           } else {
-            // Add new marker
             Symbol marker = await mapController!.addSymbol(
               SymbolOptions(
                 geometry: polygon[i],
@@ -211,14 +210,12 @@ class GeofenceComponentState extends State<GeofenceComponent> {
           }
         }
 
-        // Remove excess markers if polygon has fewer points now
         while (markers[polyIndex].length > polygon.length - 1) {
           await mapController?.removeSymbol(markers[polyIndex].last);
           markers[polyIndex].removeLast();
         }
       }
 
-      // Remove markers for deleted polygons
       while (markers.length > geofenceArrays.length) {
         for (Symbol marker in markers.last) {
           await mapController?.removeSymbol(marker);
@@ -236,7 +233,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     try {
       for (int i = 0; i < geofenceArrays.length; i++) {
         if (i < polygonFills.length) {
-          // Update existing fill
           await mapController?.updateFill(
             polygonFills[i]!,
             FillOptions(
@@ -247,7 +243,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
             ),
           );
         } else {
-          // Add new fill
           Fill? fill = await mapController?.addFill(
             FillOptions(
               geometry: [geofenceArrays[i]],
@@ -260,7 +255,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         }
       }
 
-      // Remove excess fills
       while (polygonFills.length > geofenceArrays.length) {
         await mapController?.removeFill(polygonFills.last!);
         polygonFills.removeLast();
@@ -277,14 +271,12 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       for (int polyIndex = 0; polyIndex < geofenceArrays.length; polyIndex++) {
         List<LatLng> polygon = geofenceArrays[polyIndex];
 
-        // Ensure lines list is initialized for this polygon
         if (lines.length <= polyIndex) {
           lines.add([]);
         }
 
         for (int i = 0; i < polygon.length - 1; i++) {
           if (i < lines[polyIndex].length) {
-            // Update existing line
             await mapController?.updateLine(
               lines[polyIndex][i],
               LineOptions(
@@ -296,7 +288,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
               ),
             );
           } else {
-            // Add new line
             Line line = await mapController!.addLine(
               LineOptions(
                 geometry: [polygon[i], polygon[i + 1]],
@@ -310,14 +301,12 @@ class GeofenceComponentState extends State<GeofenceComponent> {
           }
         }
 
-        // Remove excess lines if polygon has fewer points now
         while (lines[polyIndex].length > polygon.length - 1) {
           await mapController?.removeLine(lines[polyIndex].last);
           lines[polyIndex].removeLast();
         }
       }
 
-      // Remove lines for deleted polygons
       while (lines.length > geofenceArrays.length) {
         for (Line line in lines.last) {
           await mapController?.removeLine(line);
@@ -341,7 +330,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   Future<void> _addMidpointSymbol(int polyIndex, int lineIndex) async {
-    // Remove previous selected line symbol if exists
     if (selectedLineSymbol != null) {
       await mapController?.removeSymbol(selectedLineSymbol!);
       selectedLineSymbol = null;
@@ -373,14 +361,11 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     if (id == selectedLineSymbol?.id && selectedPolygonIndex != null && selectedLineIndex != null) {
       if (eventType == DragEventType.end) {
         setState(() {
-          // Insert the new point into the geofencePolygon
           geofenceArrays[selectedPolygonIndex!].insert(selectedLineIndex! + 1, current);
-          // Remove the midPoint symbol and reset selection
           mapController?.removeSymbol(selectedLineSymbol!);
           selectedLineSymbol = null;
           selectedLineIndex = null;
           selectedPolygonIndex = null;
-          // Re-update everything to reflect the new polygon state
           updateMarkers();
           updatePolygonFills();
         });
@@ -394,19 +379,15 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       final markerList = polyIndexEntry.value;
       final index = markerList.indexWhere((marker) => marker.id == id);
       if (index != -1) {
-        // Update the geofencePolygon vertex position based on drag event.
         setState(() {
           geofenceArrays[polyIndex][index] = current;
-          // If this is the first point, also update the last point to keep the polygon closed
           if (index == 0) {
             geofenceArrays[polyIndex][geofenceArrays[polyIndex].length - 1] = current;
           }
         });
 
-        // Update the connected lines
         _updateConnectedLines(polyIndex, index);
 
-        // If it's the end of the drag, update the entire polygon
         if (eventType == DragEventType.end) {
           updatePolygonFills();
         }
@@ -419,11 +400,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     final polygon = geofenceArrays[polyIndex];
     final lineCount = polygon.length - 1;
 
-    // Update the line before the vertex
     int prevLineIndex = (vertexIndex - 1 + lineCount) % lineCount;
     await updateTempLine(polyIndex, prevLineIndex);
 
-    // Update the line after the vertex
     int nextLineIndex = vertexIndex % lineCount;
     await updateTempLine(polyIndex, nextLineIndex);
   }
@@ -447,11 +426,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   Future<void> _onStyleLoadedCallback() async {
     try {
       await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
-      // await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
-
       MapLogger.log('Custom marker image loaded successfully.');
 
-      setGeofencePolygons(widget.initialPolygons);
+      setGeofencePolygons(geofenceArrays);
     } catch (e) {
       MapLogger.error('Error loading custom marker image: $e');
     }
@@ -464,10 +441,12 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     return mapController!.addImage(name, list);
   }
 
-  // Modify the build method to get the button's position
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(geofenceName),
+      ),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
@@ -485,7 +464,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
             target: LatLng(37.7749, -122.4194), // San Francisco
             zoom: 14.0,
           ),
-          // styleString: 'https://api.maptiler.com/maps/streets/style.json?key=QBMCVBrM2oLPkQgiPdQV',
           compassViewPosition: CompassViewPosition.topRight,
           compassEnabled: true,
         ),

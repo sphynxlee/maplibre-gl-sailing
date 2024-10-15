@@ -23,19 +23,33 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   MapLibreMapController? mapController;
 
   // Initial polygons
-  List<List<LatLng>> initialPolygons = [
-    [
-      const LatLng(37.7749, -122.4194), // Polygon 1 - Point A
-      const LatLng(37.7799, -122.4194), // Point B
-      const LatLng(37.7799, -122.4144), // Point C
-      const LatLng(37.7749, -122.4144), // Point D
-    ],
-    [
-      const LatLng(37.7849, -122.4294), // Polygon 2 - Point A
-      const LatLng(37.7899, -122.4294), // Point B
-      const LatLng(37.7899, -122.4244), // Point C
-      const LatLng(37.7849, -122.4244), // Point D
-    ],
+  List<Map<String, dynamic>> initialPolygons = [
+    {
+      'name': "San Francisco Geofence 1",
+      'orgId': "SF111",
+      'polygon': [
+        [
+          {'latitude': 37.7749, 'longitude': -122.4194}, // Polygon 1 - Point A
+          {'latitude': 37.7799, 'longitude': -122.4194}, // Point B
+          {'latitude': 37.7799, 'longitude': -122.4144}, // Point C
+          {'latitude': 37.7749, 'longitude': -122.4144}, // Point D
+        ],
+        // Additional polygons can be added here
+      ],
+    },
+    {
+      'name': "San Francisco Geofence 2",
+      'orgId': "SF222",
+      'polygon': [
+        [
+          {'latitude': 37.7849, 'longitude': -122.4294}, // Polygon 2 - Point A
+          {'latitude': 37.7899, 'longitude': -122.4294}, // Point B
+          {'latitude': 37.7899, 'longitude': -122.4244}, // Point C
+          {'latitude': 37.7849, 'longitude': -122.4244}, // Point D
+        ],
+        // Additional polygons can be added here
+      ],
+    }
     // Add more polygons as needed
   ];
 
@@ -45,7 +59,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
       appBar: AppBar(
         title: const Text('Geofence Demo'),
       ),
-      body: GeofenceComponent(initialPolygons: initialPolygons),
+      body: GeofenceComponent(initialGeofence: initialPolygons[0]),
     );
   }
 }
