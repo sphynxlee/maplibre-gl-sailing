@@ -31,6 +31,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   bool isDrawingPolygon = false;
 
+  // Add this variable to store the button's position
+  Rect? _buttonRect;
+
   @override
   void initState() {
     super.initState();
@@ -56,14 +59,29 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     mapController?.onLineTapped.add(_onLineTapped);
   }
 
+  // Modify the _handleMapClick function
   void _handleMapClick(Point<double> point, LatLng coordinates) {
     MapLogger.log('Map clicked at point: $point, coordinates: $coordinates');
     if (isDrawingPolygon) {
-      setState(() {
-        currentGeofence.add(coordinates);
-      });
-      _updateCurrentPolygon();
+      // Check if the click is not near the button
+      if (_buttonRect == null || !_isClickNearButton(point)) {
+        setState(() {
+          currentGeofence.add(coordinates);
+        });
+        _updateCurrentPolygon();
+      }
     }
+  }
+
+  // Add this new method to check if the click is near the button
+  bool _isClickNearButton(Point<double> point) {
+    if (_buttonRect == null) return false;
+    // Define a threshold (e.g., 50 pixels) to consider "near" the button
+    const threshold = 50.0;
+    return point.x >= _buttonRect!.left - threshold &&
+           point.x <= _buttonRect!.right + threshold &&
+           point.y >= _buttonRect!.top - threshold &&
+           point.y <= _buttonRect!.bottom + threshold;
   }
 
   void _startDrawingPolygon() {
@@ -98,12 +116,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   Future<void> _updateCurrentPolygon() async {
     if (currentGeofence.isEmpty) return;
-
-    // Remove previous temporary polygon
-    // if (polygonFills.isNotEmpty && polygonFills.last != null) {
-    //   await mapController?.removeFill(polygonFills.last!);
-    //   polygonFills.removeLast();
-    // }
 
     // Ensure markers list is initialized for this polygon
     if (markers.length <= currentGeofence.length) {
@@ -452,6 +464,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     return mapController!.addImage(name, list);
   }
 
+  // Modify the build method to get the button's position
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -482,9 +495,25 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         children: [
           ZoomControls(mapController: mapController),
           const SizedBox(height: 16),
-          FloatingActionButton(
-            onPressed: isDrawingPolygon ? _finishDrawingPolygon : _startDrawingPolygon,
-            child: Icon(isDrawingPolygon ? Icons.check : Icons.fence),
+          Builder(
+            builder: (context) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+                if (renderBox != null) {
+                  final position = renderBox.localToGlobal(Offset.zero);
+                  _buttonRect = Rect.fromLTWH(
+                    position.dx,
+                    position.dy,
+                    renderBox.size.width,
+                    renderBox.size.height,
+                  );
+                }
+              });
+              return FloatingActionButton(
+                onPressed: isDrawingPolygon ? _finishDrawingPolygon : _startDrawingPolygon,
+                child: Icon(isDrawingPolygon ? Icons.check : Icons.fence),
+              );
+            },
           ),
         ],
       ),
