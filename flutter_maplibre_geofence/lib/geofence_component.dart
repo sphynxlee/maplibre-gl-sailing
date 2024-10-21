@@ -42,6 +42,40 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   @override
   void initState() {
     super.initState();
+    // Initialize geofences from the geofenceController
+    _loadGeofences();
+  }
+
+  // Read (fetch) geofences
+  void _loadGeofences() async {
+    // TODO: Implement
+  }
+
+  // Save (create) geofence
+  void _saveGeofence() {
+    if (currentGeofence.length >= 3) {
+      // widget.geofenceController.addGeofence(GeofenceModel(
+      //   name: 'Geofence ${widget.geofenceController.geofences.length + 1}',
+      //   orgId: 'org1',
+      //   polygon: currentGeofence.map((latLng) => LatLngType(latitude: latLng.latitude, longitude: latLng.longitude)).toList()
+      // ));
+      _finishDrawingPolygon();
+    } else {
+      // Show an error message if the polygon has less than 3 vertices
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A polygon must have at least 3 vertices.')),
+      );
+    }
+  }
+
+  // Delete geofence
+  void _deleteGeofence(int index) {
+    // TODO: Implement
+  }
+
+  // Alter (update) geofence
+  void _updateGeofence(int index) {
+    // TODO: Implement
   }
 
   @override
@@ -64,7 +98,6 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     mapController?.onLineTapped.add(_onLineTapped);
   }
 
-  // Modify the _handleMapClick function
   void _handleMapClick(Point<double> point, LatLng coordinates) {
     MapLogger.log('$TAG: Map clicked at point: $point, coordinates: $coordinates');
     if (isDrawingPolygon) {
@@ -97,24 +130,17 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   void _finishDrawingPolygon() {
     MapLogger.log('$TAG: Finishing to draw polygon');
-    if (currentGeofence.length >= 3) {
-      setState(() {
-        // Ensure the polygon is closed
-        List<LatLng> newPolygon = List.from(currentGeofence)..add(currentGeofence.first);
-        geofenceArrays.add(newPolygon);
-        isDrawingPolygon = false;
-        currentGeofence = [];
-      });
-      // Update the map after adding the new polygon
-      updateMarkers();
-      updatePolygonFills();
-      MapLogger.log('$TAG: New polygon added. Total polygons: ${geofenceArrays.length}');
-    } else {
-      // Show an error message if the polygon has less than 3 vertices
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A polygon must have at least 3 vertices.')),
-      );
-    }
+    setState(() {
+      // Ensure the polygon is closed
+      List<LatLng> newPolygon = List.from(currentGeofence)..add(currentGeofence.first);
+      geofenceArrays.add(newPolygon);
+      isDrawingPolygon = false;
+      currentGeofence = [];
+    });
+    // Update the map after adding the new polygon
+    updateMarkers();
+    updatePolygonFills();
+    MapLogger.log('$TAG: New polygon added. Total polygons: ${geofenceArrays.length}');
   }
 
   Future<void> _updateCurrentPolygon() async {
@@ -153,16 +179,24 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void setGeofencePolygons(List<Geofence> polygons) {
+    MapLogger.log('$TAG: Setting geofence polygons: $polygons');
     setState(() {
       geofenceArrays = [];
 
-      for (var coords in polygons) {
-        // Ensure the polygon is closed
-        List<LatLng> polygon = List.from(coords.polygon);
-        if (polygon.isNotEmpty && polygon.first != polygon.last) {
-          polygon.add(polygon.first);
+      for (var geofenceModel in polygons) {
+        if (geofenceModel is Geofence) {
+          List<LatLng> polygon = geofenceModel.polygon!.map((latLngType) {
+            return LatLng(latLngType.latitude, latLngType.longitude);
+          }).toList();
+
+          // Ensure the polygon is closed
+          if (polygon.isNotEmpty && polygon.first != polygon.last) {
+            polygon.add(polygon.first);
+          }
+          geofenceArrays.add(polygon);
+        } else {
+          MapLogger.error('$TAG: Unexpected type in polygons list: ${geofenceModel.runtimeType}');
         }
-        geofenceArrays.add(polygon);
       }
     });
 
