@@ -18,6 +18,10 @@ class GeofenceComponent extends StatefulWidget {
 }
 
 class GeofenceComponentState extends State<GeofenceComponent> {
+  static const String TAG = 'Geofence-Component';
+  // Define a threshold (e.g., 50 pixels) to consider "near" the button
+  static const double BUTTON_THRESHOLD = 50.0;
+
   MapLibreMapController? mapController;
 
   List<List<LatLng>> geofenceArrays = [];
@@ -62,7 +66,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
   // Modify the _handleMapClick function
   void _handleMapClick(Point<double> point, LatLng coordinates) {
-    MapLogger.log('Map clicked at point: $point, coordinates: $coordinates');
+    MapLogger.log('$TAG: Map clicked at point: $point, coordinates: $coordinates');
     if (isDrawingPolygon) {
       // Check if the click is not near the button
       if (_buttonRect == null || !_isClickNearButton(point)) {
@@ -74,19 +78,17 @@ class GeofenceComponentState extends State<GeofenceComponent> {
     }
   }
 
-  // Add this new method to check if the click is near the button
+  // Check if the click is near the button
   bool _isClickNearButton(Point<double> point) {
     if (_buttonRect == null) return false;
-    // Define a threshold (e.g., 50 pixels) to consider "near" the button
-    const threshold = 50.0;
-    return point.x >= _buttonRect!.left - threshold &&
-           point.x <= _buttonRect!.right + threshold &&
-           point.y >= _buttonRect!.top - threshold &&
-           point.y <= _buttonRect!.bottom + threshold;
+    return point.x >= _buttonRect!.left - BUTTON_THRESHOLD &&
+        point.x <= _buttonRect!.right + BUTTON_THRESHOLD &&
+        point.y >= _buttonRect!.top - BUTTON_THRESHOLD &&
+        point.y <= _buttonRect!.bottom + BUTTON_THRESHOLD;
   }
 
   void _startDrawingPolygon() {
-    MapLogger.log('Starting to draw polygon');
+    MapLogger.log('$TAG: Starting to draw polygon');
     setState(() {
       isDrawingPolygon = true;
       currentGeofence = [];
@@ -94,7 +96,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
   }
 
   void _finishDrawingPolygon() {
-    MapLogger.log('Finishing to draw polygon');
+    MapLogger.log('$TAG: Finishing to draw polygon');
     if (currentGeofence.length >= 3) {
       setState(() {
         // Ensure the polygon is closed
@@ -106,7 +108,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       // Update the map after adding the new polygon
       updateMarkers();
       updatePolygonFills();
-      MapLogger.log('New polygon added. Total polygons: ${geofenceArrays.length}');
+      MapLogger.log('$TAG: New polygon added. Total polygons: ${geofenceArrays.length}');
     } else {
       // Show an error message if the polygon has less than 3 vertices
       ScaffoldMessenger.of(context).showSnackBar(
@@ -227,9 +229,9 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         markers.removeLast();
       }
 
-      MapLogger.log('Markers updated successfully. Total polygons: ${geofenceArrays.length}');
+      MapLogger.log('$TAG: Markers updated successfully. Total polygons: ${geofenceArrays.length}');
     } catch (e) {
-      MapLogger.error('Error updating markers: $e');
+      MapLogger.error('$TAG: Error updating markers: $e');
     }
   }
 
@@ -269,7 +271,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
 
       await updateLines();
     } catch (e) {
-      MapLogger.error('Error updating polygon fills: $e');
+      MapLogger.error('$TAG: Error updating polygon fills: $e');
     }
   }
 
@@ -326,7 +328,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         lines.removeLast();
       }
     } catch (e) {
-      MapLogger.error('Error updating lines: $e');
+      MapLogger.error('$TAG: Error updating lines: $e');
     }
   }
 
@@ -365,7 +367,7 @@ class GeofenceComponentState extends State<GeofenceComponent> {
         draggable: true,
       ),
     );
-    MapLogger.log('Midpoint symbol added successfully. ID: ${selectedLineSymbol?.id}');
+    MapLogger.log('$TAG: Midpoint symbol added successfully. ID: ${selectedLineSymbol?.id}');
     mapController?.setSymbolIconAllowOverlap(true);
     selectedLineIndex = lineIndex;
   }
@@ -450,13 +452,13 @@ class GeofenceComponentState extends State<GeofenceComponent> {
       await addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
       // await addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
 
-      MapLogger.log('Custom marker image loaded successfully.');
+      MapLogger.log('$TAG: Custom marker image loaded successfully.');
 
       setGeofencePolygons(widget.initialPolygons);
     } catch (e) {
-      MapLogger.error('Error loading custom marker image: $e');
+      MapLogger.error('$TAG: Error loading custom marker image: $e');
     }
-    MapLogger.log('Map style has been loaded.');
+    MapLogger.log('$TAG: Map style has been loaded.');
   }
 
   Future<void> addImageFromAsset(String name, String assetName) async {
