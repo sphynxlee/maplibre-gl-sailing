@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
@@ -80,19 +79,15 @@ class GeofenceComponent {
     geofenceArrays = [];
 
     for (var geofenceModel in polygons) {
-      if (geofenceModel is Geofence) {
-        List<LatLng> polygon = geofenceModel.polygon.map((latLng) {
-          return LatLng(latLng.latitude, latLng.longitude);
-        }).toList();
+      List<LatLng> polygon = geofenceModel.polygon.map((latLng) {
+        return LatLng(latLng.latitude, latLng.longitude);
+      }).toList();
 
-        // Ensure the polygon is closed
-        if (polygon.isNotEmpty && polygon.first != polygon.last) {
-          polygon.add(polygon.first);
-        }
-        geofenceArrays.add(polygon);
-      } else {
-        MapLogger.error('$TAG: Unexpected type in polygons list: ${geofenceModel.runtimeType}');
+      // Ensure the polygon is closed
+      if (polygon.isNotEmpty && polygon.first != polygon.last) {
+        polygon.add(polygon.first);
       }
+      geofenceArrays.add(polygon);
     }
 
     // Update the polygons on the map
