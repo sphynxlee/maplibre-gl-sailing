@@ -36,13 +36,7 @@ class GeofenceComponent {
     mapController.onFeatureDrag.add(_onVertexSymbolDrag);
     mapController.onFeatureDrag.add(_onMidPointSymbolDrag);
     mapController.onLineTapped.add(_onLineTapped);
-    // mapController.onMapClick?.add(handleMapClick);
 
-    _loadGeofences();
-    _onStyleLoadedCallback();
-  }
-
-  void _loadGeofences() {
     setGeofencePolygons(initialPolygons);
   }
 
@@ -438,12 +432,10 @@ class GeofenceComponent {
     );
   }
 
-  Future<void> _onStyleLoadedCallback() async {
+  Future<void> onStyleLoadedCallback() async {
     try {
       await _addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
       MapLogger.log('$TAG: Custom marker image loaded successfully.');
-
-      setGeofencePolygons(initialPolygons);
     } catch (e) {
       MapLogger.error('$TAG: Error loading custom marker image: $e');
     }

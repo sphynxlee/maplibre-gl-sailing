@@ -65,7 +65,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
   }
 
   Future<void> _onStyleLoadedCallback() async {
-    // Any additional style loading can be done here
+    geofenceComponent?.onStyleLoadedCallback();
   }
 
   bool _isClickNearButton(Point<double> point) {
