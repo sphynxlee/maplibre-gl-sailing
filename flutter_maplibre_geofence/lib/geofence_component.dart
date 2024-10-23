@@ -53,8 +53,10 @@ class GeofenceComponent {
       geofenceArrays.add(newPolygon);
       isDrawingPolygon = false;
       currentGeofence = [];
-      updateMarkers();
-      updatePolygonFills();
+      // Update only the newly added polygon
+      int newPolygonIndex = geofenceArrays.length - 1;
+      updateMarkers(index: newPolygonIndex);
+      updatePolygonFills(index: newPolygonIndex);
       MapLogger.log('$TAG: New polygon added. Total polygons: ${geofenceArrays.length}');
     } else {
       MapLogger.error('$TAG: A polygon must have at least 3 vertices.');
@@ -105,7 +107,6 @@ class GeofenceComponent {
           draggable: true,
         ),
       );
-      // Assuming you have a separate list for current markers
       markers.add([marker]);
     }
 
@@ -121,9 +122,11 @@ class GeofenceComponent {
     polygonFills.add(fill);
   }
 
-  Future<void> updateMarkers() async {
+  Future<void> updateMarkers({int? index}) async {
     try {
-      for (int polyIndex = 0; polyIndex < geofenceArrays.length; polyIndex++) {
+      List<int> indicesToUpdate = index != null ? [index] : List.generate(geofenceArrays.length, (i) => i);
+
+      for (int polyIndex in indicesToUpdate) {
         List<LatLng> polygon = geofenceArrays[polyIndex];
 
         // Ensure markers list is initialized for this polygon
@@ -185,10 +188,12 @@ class GeofenceComponent {
     }
   }
 
-  Future<void> updatePolygonFills() async {
+  Future<void> updatePolygonFills({int? index}) async {
     try {
-      for (int i = 0; i < geofenceArrays.length; i++) {
-        if (i < polygonFills.length) {
+      List<int> indicesToUpdate = index != null ? [index] : List.generate(geofenceArrays.length, (i) => i);
+
+      for (int i in indicesToUpdate) {
+        if (i < polygonFills.length && polygonFills[i] != null) {
           // Update existing fill
           await mapController.updateFill(
             polygonFills[i]!,
@@ -219,15 +224,17 @@ class GeofenceComponent {
         polygonFills.removeLast();
       }
 
-      await updateLines();
+      await updateLines(index: index);
     } catch (e) {
       MapLogger.error('$TAG: Error updating polygon fills: $e');
     }
   }
 
-  Future<void> updateLines() async {
+  Future<void> updateLines({int? index}) async {
     try {
-      for (int polyIndex = 0; polyIndex < geofenceArrays.length; polyIndex++) {
+      List<int> indicesToUpdate = index != null ? [index] : List.generate(geofenceArrays.length, (i) => i);
+
+      for (int polyIndex in indicesToUpdate) {
         List<LatLng> polygon = geofenceArrays[polyIndex];
 
         // Ensure lines list is initialized for this polygon
@@ -339,9 +346,9 @@ class GeofenceComponent {
         selectedLineSymbol = null;
         selectedLineIndex = null;
         selectedPolygonIndex = null;
-        // Re-update everything to reflect the new polygon state
-        updateMarkers();
-        updatePolygonFills();
+        // Update only the current polygon
+        updateMarkers(index: selectedPolygonIndex);
+        updatePolygonFills(index: selectedPolygonIndex);
       }
     }
   }
