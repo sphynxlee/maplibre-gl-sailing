@@ -92,9 +92,6 @@ class GeofenceComponent {
   Future<void> _updateCurrentPolygon() async {
     if (currentGeofence.isEmpty) return;
 
-    // Clear previous temporary markers and fills
-    // await _clearTemporaryMarkersAndFills();
-
     // Add marker for each point
     for (var point in currentGeofence) {
       Symbol marker = await mapController.addSymbol(
@@ -123,28 +120,6 @@ class GeofenceComponent {
     );
     polygonFills.add(fill);
   }
-
-  // Future<void> _clearTemporaryMarkersAndFills() async {
-  //   // Remove temporary markers
-  //   if (markers.isNotEmpty) {
-  //     for (var markerList in markers) {
-  //       for (var marker in markerList) {
-  //         await mapController.removeSymbol(marker);
-  //       }
-  //     }
-  //     markers.clear();
-  //   }
-
-  //   // Remove temporary fills
-  //   if (polygonFills.isNotEmpty) {
-  //     for (var fill in polygonFills) {
-  //       if (fill != null) {
-  //         await mapController.removeFill(fill);
-  //       }
-  //     }
-  //     polygonFills.clear();
-  //   }
-  // }
 
   Future<void> updateMarkers() async {
     try {
