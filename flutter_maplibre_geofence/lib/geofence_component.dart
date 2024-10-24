@@ -31,19 +31,22 @@ class GeofenceComponent {
   }
 
   void onLocationUpdate(LatLng currentLocation) {
-    for (int i = 0; i < geofenceArrays.length; i++) {
-      bool isInside = _isPointInPolygon(currentLocation, geofenceArrays[i]);
+    MapLogger.log('$TAG: Current location: $currentLocation');
+    MapLogger.log('$TAG: Number of geofences: ${geofenceArrays.length}');
 
-      if (isInside && (selectedPolygonIndex == null || selectedPolygonIndex != i)) {
-        // Vehicle entered the geofence
-        selectedPolygonIndex = i;
-        MapLogger.log('$TAG: Vehicle entered geofence $i');
+    for (int i = 0; i < geofenceArrays.length; i++) {
+      MapLogger.log('$TAG: Geofence $i coordinates: ${geofenceArrays[i]}');
+      bool isInside = _isPointInPolygon(currentLocation, geofenceArrays[i]);
+      MapLogger.log('$TAG: Is inside geofence $i: $isInside');
+
+      if (isInside) {
+        // Vehicle is inside the geofence
+        MapLogger.log('$TAG: Vehicle is inside geofence $i');
         _onGeofenceEnter(i);
-      } else if (!isInside && selectedPolygonIndex == i) {
-        // Vehicle left the geofence
-        MapLogger.log('$TAG: Vehicle left geofence $i');
+      } else {
+        // Vehicle is outside the geofence
+        MapLogger.log('$TAG: Vehicle is outside geofence $i');
         _onGeofenceExit(i);
-        selectedPolygonIndex = null;
       }
     }
   }
@@ -57,7 +60,9 @@ class GeofenceComponent {
         intersectCount++;
       }
     }
-    return (intersectCount % 2) == 1; // odd number of intersections means inside the polygon
+    bool result = (intersectCount % 2) == 1;
+    MapLogger.log('$TAG: Point $point, Intersect count: $intersectCount, Is inside: $result');
+    return result;
   }
 
   bool _rayCastIntersect(LatLng point, LatLng vertex1, LatLng vertex2) {

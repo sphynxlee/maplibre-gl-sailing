@@ -68,14 +68,12 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
   void _startVehicleSimulation() {
     routeTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (currentRouteIndex < vehicleRoute.length) {
-        LatLng currentLocation = vehicleRoute[currentRouteIndex];
-        geofenceComponent?.onLocationUpdate(currentLocation);
-        _updateVehicleMarker(currentLocation);
-        currentRouteIndex++;
-      } else {
-        timer.cancel();
-      }
+      LatLng currentLocation = vehicleRoute[currentRouteIndex];
+      geofenceComponent?.onLocationUpdate(currentLocation);
+      _updateVehicleMarker(currentLocation);
+
+      // Update the index, looping back to 0 when reaching the end
+      currentRouteIndex = (currentRouteIndex + 1) % vehicleRoute.length;
     });
   }
 
@@ -114,7 +112,7 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
         mapController: mapController!,
       );
 
-      LatLng initialLocation = LatLng(37.7749, -122.4194);
+      LatLng initialLocation = vehicleRoute.first;
       geofenceComponent!.onLocationUpdate(initialLocation);
       _startVehicleSimulation();
     });
