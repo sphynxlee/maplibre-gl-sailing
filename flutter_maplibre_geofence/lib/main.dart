@@ -3,6 +3,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'geofence_component.dart';
 import 'geofence_interfaces.dart';
 import 'dart:math';
+import 'dart:async';
 
 void main() {
   runApp(const MaterialApp(home: GeofenceHomePage()));
@@ -47,8 +48,59 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
     ),
   ];
 
+  final List<LatLng> vehicleRoute = [
+    const LatLng(37.7749, -122.4194),
+    const LatLng(37.7750, -122.4184),
+    const LatLng(37.7751, -122.4174),
+    const LatLng(37.7752, -122.4164),
+    const LatLng(37.7753, -122.4154),
+  ];
+
+  int currentRouteIndex = 0;
+  Timer? routeTimer;
+  Symbol? vehicleSymbol;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the simulation after the map is created
+  }
+
+  void _startVehicleSimulation() {
+    routeTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (currentRouteIndex < vehicleRoute.length) {
+        LatLng currentLocation = vehicleRoute[currentRouteIndex];
+        geofenceComponent?.onLocationUpdate(currentLocation);
+        _updateVehicleMarker(currentLocation);
+        currentRouteIndex++;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void _updateVehicleMarker(LatLng location) {
+    if (vehicleSymbol != null) {
+      mapController?.updateSymbol(
+        vehicleSymbol!,
+        SymbolOptions(geometry: location),
+      );
+    } else {
+      mapController?.addSymbol(
+        SymbolOptions(
+          geometry: location,
+          iconImage: "user-marker", // Ensure you have an icon named "car-icon"
+          iconSize: 1.0,
+        ),
+      ).then((symbol) {
+        vehicleSymbol = symbol;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    routeTimer?.cancel();
     mapController?.dispose();
     super.dispose();
   }
@@ -61,6 +113,10 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
         initialPolygons: initialPolygons,
         mapController: mapController!,
       );
+
+      LatLng initialLocation = LatLng(37.7749, -122.4194);
+      geofenceComponent!.onLocationUpdate(initialLocation);
+      _startVehicleSimulation();
     });
   }
 

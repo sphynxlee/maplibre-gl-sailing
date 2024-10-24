@@ -30,6 +30,67 @@ class GeofenceComponent {
     _initialize();
   }
 
+  void onLocationUpdate(LatLng currentLocation) {
+    for (int i = 0; i < geofenceArrays.length; i++) {
+      bool isInside = _isPointInPolygon(currentLocation, geofenceArrays[i]);
+
+      if (isInside && (selectedPolygonIndex == null || selectedPolygonIndex != i)) {
+        // Vehicle entered the geofence
+        selectedPolygonIndex = i;
+        MapLogger.log('$TAG: Vehicle entered geofence $i');
+        _onGeofenceEnter(i);
+      } else if (!isInside && selectedPolygonIndex == i) {
+        // Vehicle left the geofence
+        MapLogger.log('$TAG: Vehicle left geofence $i');
+        _onGeofenceExit(i);
+        selectedPolygonIndex = null;
+      }
+    }
+  }
+
+  bool _isPointInPolygon(LatLng point, List<LatLng> polygon) {
+    int intersectCount = 0;
+    for (int j = 0; j < polygon.length - 1; j++) {
+      LatLng vertex1 = polygon[j];
+      LatLng vertex2 = polygon[j + 1];
+      if (_rayCastIntersect(point, vertex1, vertex2)) {
+        intersectCount++;
+      }
+    }
+    return (intersectCount % 2) == 1; // odd number of intersections means inside the polygon
+  }
+
+  bool _rayCastIntersect(LatLng point, LatLng vertex1, LatLng vertex2) {
+    double px = point.longitude;
+    double py = point.latitude;
+    double v1x = vertex1.longitude;
+    double v1y = vertex1.latitude;
+    double v2x = vertex2.longitude;
+    double v2y = vertex2.latitude;
+
+    if ((v1y > py && v2y > py) || (v1y < py && v2y < py) || (v1x < px && v2x < px)) {
+      return false;
+    }
+
+    double m = (v2y - v1y) / (v2x - v1x);
+    double bee = v1y - m * v1x;
+    double x = (py - bee) / m;
+
+    return x > px;
+  }
+
+  void _onGeofenceEnter(int index) {
+    // Handle geofence enter event
+    MapLogger.log('$TAG: Handling geofence enter for polygon $index');
+    // Add your custom logic here
+  }
+
+  void _onGeofenceExit(int index) {
+    // Handle geofence exit event
+    MapLogger.log('$TAG: Handling geofence exit for polygon $index');
+    // Add your custom logic here
+  }
+
   void _initialize() {
     mapController.setSymbolIconAllowOverlap(true);
 
@@ -417,6 +478,7 @@ class GeofenceComponent {
   Future<void> onStyleLoadedCallback() async {
     try {
       await _addImageFromAsset("custom-marker", "assets/symbols/custom-marker.png");
+      await _addImageFromAsset("user-marker", "assets/symbols/user-marker.png");
       MapLogger.log('$TAG: Custom marker image loaded successfully.');
     } catch (e) {
       MapLogger.error('$TAG: Error loading custom marker image: $e');
