@@ -114,8 +114,8 @@ class GeofenceHomePageState extends State<GeofenceHomePage> {
 
       // LatLng initialLocation = vehicleRoute.first;
       // geofenceComponent!.onLocationUpdate(initialLocation);
-      _startVehicleSimulation();
     });
+    _startVehicleSimulation();
   }
 
   Future<void> _onStyleLoadedCallback() async {
